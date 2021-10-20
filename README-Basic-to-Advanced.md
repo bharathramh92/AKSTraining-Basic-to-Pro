@@ -1128,11 +1128,31 @@ AKS HOL - Basic to Advanced
 
   - Cluster Upgrades
 
+  - Cleanup
+
+    ```bash
+    #Cleanup resources - Individual
+    
+    #az aks delete -g $aksResourceGroup -n $clusterName --yes
+    #az acr delete -g $aksResourceGroup -n $acrName --yes
+    #az keyvault delete -g $aksResourceGroup -n $keyVaultName --yes
+    #az network application-gateway delete -g $aksResourceGroup -n $aksVnetName --yes
+    #az network vnet delete -g $aksResourceGroup -n $aksVnetName --yes
+    
+    #Cleanup resources - All
+    
+    #az group delete -n $aksResourceGroup --yes
+    ```
+
+    
+
 
 
 ## Final Goal
 
 ![AKS-Ref-Achitecture-v2.1](./Assets/AKS-Ref-Achitecture-v2.1.png)
+
+
 
 ## References
 
