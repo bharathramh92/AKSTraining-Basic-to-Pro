@@ -271,10 +271,14 @@ httpsListenerNames=$httpsListenerNames \
 backendIpAddress=$backendIpAddress
 */
 
+Application Gateway
+=====================
 #Create Application Gateway from Azure Portal
 <Steps from endtoendSSL.md>
 #backend pool of app gateway points to Private IP of Nginx Ingress Controller
 
+RBAC
+=====================
 #Deploy RBAC for the AKS cluster
 helm create rbac-chart
 
@@ -286,19 +290,9 @@ helm install rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f
 
 #helm uninstall rbac-chart
 
-#Deploy Ingress Rule object for the AKS cluster
-helm create ingress-chart
-
-helm install  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
-#helm upgrade  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
-
-helm uninstall ingress-chart -n aks-workshop-dev
-
-helm install  ingress-chart -n aks-workshop-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
-#helm upgrade  ingress-chart -n aks-workshop-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
-
-#helm uninstall ingress-chart -n aks-workshop-qa
-
+Ingress - Smoke
+=====================
+#Deploy Ingress Rule object for Smoke namespace
 helm create smoke-ingress-chart
 
 helm install  smoke-ingress-chart -n smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
@@ -306,6 +300,8 @@ helm install  smoke-ingress-chart -n smoke $setupFolderPath/Helms/ingress-chart/
 
 #helm uninstall smoke-ingress-chart -n smoke
 
+TEST - Smoke
+=====================
 #Test Cluster Health and end-to-end connectivity
 #Deploy Nginx app in Smoke Namespace
 
@@ -314,16 +310,18 @@ az acr import -n $acrName --source docker.io/library/nginx:alpine -t nginx:alpin
 
 helm create smoke-tests-chart
 
-helm install smoke-tests-chart -n smoke $setupFolderPath/Tests/smoke-tests-chart/ -f $setupFolderPath/Tests/smoke-tests-chart/values-smoke.yaml
-#helm upgrade smoke-tests-chart -n smoke $setupFolderPath/Tests/smoke-tests-chart/ -f $setupFolderPath/Tests/smoke-tests-chart/values-smoke.yaml
+helm install smoke-tests-chart -n smoke $setupFolderPath/Helms/smoke-tests-chart/ -f $setupFolderPath/Helms/smoke-tests-chart/values-smoke.yaml
+#helm upgrade smoke-tests-chart -n smoke $setupFolderPath/Helms/smoke-tests-chart/ -f $setupFolderPath/Helms/smoke-tests-chart/values-smoke.yaml
 
 #helm uninstall smoke-tests-chart -n smoke
 
 #Call Nginx app Url; check end-to-end connectivity
-curl -k https://<appgw-dns-name>/nginx
+curl -k https://smoke-<appgw-dns-name>/nginx
 
 ================================================================================
 
+Ratings App - DEV
+=====================
 #Deploy more apps - Ratings app
 
 #Deploy backend Mongo DB as container
@@ -352,10 +350,10 @@ az acr build -t $acrName.azurecr.io/ratings-api:v1.0.0 -r $acrName .
 kubectl create secret generic aks-workshop-mongo-secret -n aks-workshop-dev --context=$CTX_CLUSTER1 \
 --from-literal=MONGOCONNECTION="mongodb://ratingsuser:ratingspwd@ratingsdb-mongodb.db:27017/ratingsdb"
 
-#Change <acrName> in the $helmPath/ratingsapi-chart/values-dev.yaml
-#Change <agentpool> in the $helmPath/ratingsapi-chart/values-dev.yaml
-helm install ratingsapi-chart -n aks-workshop-dev $helmPath/ratingsapi-chart/ -f $helmPath/ratingsapi-chart/values-dev.yaml
-helm upgrade ratingsapi-chart -n aks-workshop-dev $helmPath/ratingsapi-chart/ -f $helmPath/ratingsapi-chart/values-dev.yaml
+#Change <acrName> in the $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+#Change <agentpool> in the $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+helm install ratingsapi-chart -n aks-workshop-dev $setupFolderPath/Helms/ratingsapi-chart/ -f $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+helm upgrade ratingsapi-chart -n aks-workshop-dev $setupFolderPath/Helms/ratingsapi-chart/ -f $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
 
 #Remove RatinsgAPI app 
 #helm uninstall ratingsapi-chart -n aks-workshop-dev
@@ -368,17 +366,63 @@ https://github.com/monojit18/mslearn-aks-workshop-ratings-web.git
 #This docker build but performed in a Cloud Agent(VM) by ACR
 az acr build -t $acrName.azurecr.io/ratings-web:v1.0.0 -r $acrName .
 
-#Change <acrName> in the $helmPath/ratingsapi-chart/values-dev.yaml
-#Change <agentpool> in the $helmPath/ratingsapi-chart/values-dev.yaml
-helm install ratingsweb-chart -n aks-workshop-dev $helmPath/ratingsweb-chart/ -f $helmPath/ratingsweb-chart/values-dev.yaml
-helm upgrade ratingsweb-chart -n aks-workshop-dev $helmPath/ratingsweb-chart/ -f $helmPath/ratingsweb-chart/values-dev.yaml
+#Change <acrName> in the $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+#Change <agentpool> in the $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+helm install ratingsweb-chart -n aks-workshop-dev $setupFolderPath/Helms/ratingsweb-chart/ -f $setupFolderPath/Helms/ratingsweb-chart/values-dev.yaml
+#helm upgrade ratingsweb-chart -n aks-workshop-dev $setupFolderPath/Helms/ratingsweb-chart/ -f $setupFolderPath/Helms/ratingsweb-chart/values-dev.yaml
 
 #helm uninstall ratingsweb-chart -n aks-workshop-dev
 
+Ingress - DEV
+=====================
+#Deploy Ingress Rule object for DEV namespace
+helm create ingress-chart
+
+helm install  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+#helm upgrade  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+
+helm uninstall ingress-chart -n aks-workshop-dev
+
+#Call Ratings app Url; check end-to-end connectivity
+curl -k https://<appgw-dns-name>/
+
 ================================================================================
 
+Ratings App - QA
+=====================
+#Deploy more apps - Ratings app
 
+kubectl create secret generic aks-workshop-mongo-secret -n aks-workshop-qa --context=$CTX_CLUSTER1 \
+--from-literal=MONGOCONNECTION="mongodb://ratingsuser:ratingspwd@ratingsdb-mongodb.db:27017/ratingsdb"
 
+#Change <acrName> in the $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+#Change <agentpool> in the $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+helm install ratingsapi-chart -n aks-workshop-qa $setupFolderPath/Helms/ratingsapi-chart/ -f $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+helm upgrade ratingsapi-chart -n aks-workshop-qa $setupFolderPath/Helms/ratingsapi-chart/ -f $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+
+#Remove RatinsgAPI app 
+#helm uninstall ratingsapi-chart -n aks-workshop-qa
+
+#RatingsWeb - Ratings App Frontend
+#Change <acrName> in the $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+#Change <agentpool> in the $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+helm install ratingsweb-chart -n aks-workshop-qa $setupFolderPath/Helms/ratingsweb-chart/ -f $setupFolderPath/Helms/ratingsweb-chart/values-qa.yaml
+#helm upgrade ratingsweb-chart -n aks-workshop-qa $setupFolderPath/Helms/ratingsweb-chart/ -f $setupFolderPath/Helms/ratingsweb-chart/values-qa.yaml
+
+#helm uninstall ratingsweb-chart -n aks-workshop-qa
+
+Ingress - QA
+=====================
+#Deploy Ingress Rule object for QA namespace
+helm create ingress-chart
+
+helm install  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+#helm upgrade  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+
+helm uninstall ingress-chart -n aks-workshop-dev
+
+#Call Ratings app Url; check end-to-end connectivity
+curl -k https://<appgw-dns-name>/
 
 
 
