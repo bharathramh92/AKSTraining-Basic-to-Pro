@@ -1,4 +1,4 @@
-AKS HOL - Basic to Advanced
+# AKS HOL - Basic to Advanced
 
 ## Introduction
 
@@ -6,17 +6,14 @@ AKS HOL - Basic to Advanced
 
 ## What to Accomplish
 
-- ### Understand K8s High Level Architecture
-
-- ### Understand AKS High Level Architecture
-
-- ### Create AKS Cluster
-
-- ### Deploy Microservices
-
-- ### Cluster Configuration - Post Creation
-
-- ### Maintenance
+- Understand K8s High Level Architecture
+- Understand AKS High Level Architecture
+- Create Infrastructure for the AKS cluster
+- Virtual network
+- ]Create AKS Cluster
+- Deploy Microservices
+- Cluster Configuration - Post Creation
+- Maintenance
 
 
 ## Exclusions
@@ -347,7 +344,7 @@ AKS HOL - Basic to Advanced
 
     - cluster-admin.yaml
 
-      ```
+      ```yaml
       {{if not (lookup "rbac.authorization.k8s.io/v1" "ClusterRoleBinding" "" "<>") }}
       apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
@@ -1130,7 +1127,7 @@ AKS HOL - Basic to Advanced
 
   - Cleanup
 
-    ```bash
+    ```
     #Cleanup resources - Individual
     
     #az aks delete -g $aksResourceGroup -n $clusterName --yes
