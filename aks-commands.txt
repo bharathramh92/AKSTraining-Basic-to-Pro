@@ -283,11 +283,11 @@ RBAC
 helm create rbac-chart
 
 helm install rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
+
 #helm upgrade rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
-
 helm install rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
-#helm upgrade rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
 
+#helm upgrade rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
 #helm uninstall rbac-chart
 
 Ingress - Smoke
@@ -296,8 +296,8 @@ Ingress - Smoke
 helm create smoke-ingress-chart
 
 helm install  smoke-ingress-chart -n smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
-#helm upgrade  smoke-ingress-chart -n smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
 
+#helm upgrade  smoke-ingress-chart -n smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
 #helm uninstall smoke-ingress-chart -n smoke
 
 TEST - Smoke
@@ -311,8 +311,8 @@ az acr import -n $acrName --source docker.io/library/nginx:alpine -t nginx:alpin
 helm create smoke-tests-chart
 
 helm install smoke-tests-chart -n smoke $setupFolderPath/Helms/smoke-tests-chart/ -f $setupFolderPath/Helms/smoke-tests-chart/values-smoke.yaml
-#helm upgrade smoke-tests-chart -n smoke $setupFolderPath/Helms/smoke-tests-chart/ -f $setupFolderPath/Helms/smoke-tests-chart/values-smoke.yaml
 
+#helm upgrade smoke-tests-chart -n smoke $setupFolderPath/Helms/smoke-tests-chart/ -f $setupFolderPath/Helms/smoke-tests-chart/values-smoke.yaml
 #helm uninstall smoke-tests-chart -n smoke
 
 #Call Nginx app Url; check end-to-end connectivity
@@ -350,12 +350,11 @@ az acr build -t $acrName.azurecr.io/ratings-api:v1.0.0 -r $acrName .
 kubectl create secret generic aks-workshop-mongo-secret -n aks-workshop-dev --context=$CTX_CLUSTER1 \
 --from-literal=MONGOCONNECTION="mongodb://ratingsuser:ratingspwd@ratingsdb-mongodb.db:27017/ratingsdb"
 
-#Change <acrName> in the $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
-#Change <agentpool> in the $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
-helm install ratingsapi-chart -n aks-workshop-dev $setupFolderPath/Helms/ratingsapi-chart/ -f $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
-helm upgrade ratingsapi-chart -n aks-workshop-dev $setupFolderPath/Helms/ratingsapi-chart/ -f $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+#Change <acrName> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+#Change <agentpool> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+helm install ratingsapi-chart -n aks-workshop-dev $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
 
-#Remove RatinsgAPI app 
+#helm upgrade ratingsapi-chart -n aks-workshop-dev $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
 #helm uninstall ratingsapi-chart -n aks-workshop-dev
 
 #RatingsWeb - Ratings App Frontend
@@ -366,11 +365,11 @@ https://github.com/monojit18/mslearn-aks-workshop-ratings-web.git
 #This docker build but performed in a Cloud Agent(VM) by ACR
 az acr build -t $acrName.azurecr.io/ratings-web:v1.0.0 -r $acrName .
 
-#Change <acrName> in the $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
-#Change <agentpool> in the $setupFolderPath/Helms/ratingsapi-chart/values-dev.yaml
-helm install ratingsweb-chart -n aks-workshop-dev $setupFolderPath/Helms/ratingsweb-chart/ -f $setupFolderPath/Helms/ratingsweb-chart/values-dev.yaml
-#helm upgrade ratingsweb-chart -n aks-workshop-dev $setupFolderPath/Helms/ratingsweb-chart/ -f $setupFolderPath/Helms/ratingsweb-chart/values-dev.yaml
+#Change <acrName> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+#Change <agentpool> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+helm install ratingsweb-chart -n aks-workshop-dev $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-dev.yaml
 
+#helm upgrade ratingsweb-chart -n aks-workshop-dev $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-dev.yaml
 #helm uninstall ratingsweb-chart -n aks-workshop-dev
 
 Ingress - DEV
@@ -379,12 +378,12 @@ Ingress - DEV
 helm create ingress-chart
 
 helm install  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
-#helm upgrade  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
 
-helm uninstall ingress-chart -n aks-workshop-dev
+#helm upgrade  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+#helm uninstall ingress-chart -n aks-workshop-dev
 
 #Call Ratings app Url; check end-to-end connectivity
-curl -k https://<appgw-dns-name>/
+curl -k https://dev-<appgw-dns-name>/
 
 ================================================================================
 
@@ -395,34 +394,79 @@ Ratings App - QA
 kubectl create secret generic aks-workshop-mongo-secret -n aks-workshop-qa --context=$CTX_CLUSTER1 \
 --from-literal=MONGOCONNECTION="mongodb://ratingsuser:ratingspwd@ratingsdb-mongodb.db:27017/ratingsdb"
 
-#Change <acrName> in the $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
-#Change <agentpool> in the $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
-helm install ratingsapi-chart -n aks-workshop-qa $setupFolderPath/Helms/ratingsapi-chart/ -f $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
-helm upgrade ratingsapi-chart -n aks-workshop-qa $setupFolderPath/Helms/ratingsapi-chart/ -f $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+#Change <acrName> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+#Change <agentpool> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+helm install ratingsapi-chart -n aks-workshop-qa $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
 
-#Remove RatinsgAPI app 
+#helm upgrade ratingsapi-chart -n aks-workshop-qa $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
 #helm uninstall ratingsapi-chart -n aks-workshop-qa
 
 #RatingsWeb - Ratings App Frontend
-#Change <acrName> in the $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
-#Change <agentpool> in the $setupFolderPath/Helms/ratingsapi-chart/values-qa.yaml
-helm install ratingsweb-chart -n aks-workshop-qa $setupFolderPath/Helms/ratingsweb-chart/ -f $setupFolderPath/Helms/ratingsweb-chart/values-qa.yaml
-#helm upgrade ratingsweb-chart -n aks-workshop-qa $setupFolderPath/Helms/ratingsweb-chart/ -f $setupFolderPath/Helms/ratingsweb-chart/values-qa.yaml
+#Change <acrName> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+#Change <agentpool> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+helm install ratingsweb-chart -n aks-workshop-qa $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-qa.yaml
 
+#helm upgrade ratingsweb-chart -n aks-workshop-qa $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-qa.yaml
 #helm uninstall ratingsweb-chart -n aks-workshop-qa
 
 Ingress - QA
 =====================
 #Deploy Ingress Rule object for QA namespace
-helm create ingress-chart
 
-helm install  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
-#helm upgrade  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+helm install  ingress-chart -n aks-workshop-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
 
-helm uninstall ingress-chart -n aks-workshop-dev
+#helm upgrade  ingress-chart -n aks-workshop-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
+#helm uninstall ingress-chart -n aks-workshop-qa
 
 #Call Ratings app Url; check end-to-end connectivity
-curl -k https://<appgw-dns-name>/
+curl -k https://qa-<appgw-dns-name>/
+
+================================================================================
+
+Network Policies - DEV
+=========================
+#East-West Traffic Security
+helm install netpol-chart -n aks-workshop-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
+
+#helm upgrade netpol-chart -n aks-workshop-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
+#helm uninstall netpol-chart -n aks-workshop-dev
+
+Network Policies - QA
+=========================
+helm install netpol-chart -n aks-workshop-qa $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-qa.yaml
+
+#helm upgrade netpol-chart -n aks-workshop-qa $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-qa.yaml
+#helm uninstall netpol-chart -n aks-workshop-qa
+
+Network Policies - Smoke
+=========================
+helm install netpol-chart -n smoke $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-smoke.yaml
+
+#helm upgrade netpol-chart -n smoke $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-smoke.yaml
+#helm uninstall netpol-chart -n smoke
+
+#Call Ratings app Url; check end-to-end connectivity
+curl -k https://dev-<appgw-dns-name>/
+curl -k https://qa-<appgw-dns-name>/
+curl -k https://smoke-<appgw-dns-name>/nginx
+
+podName=$(kubectl get pod -l app=nginx-pod -n primary -o jsonpath='{.items[0].metadata.name}')
+
+#Should succeed
+kubectl exec -it $podName -n smoke -- curl -k http://ratingsapp-web.aks-workshop-dev.svc/
+
+#Should succeed
+kubectl exec -it $podName -n smoke -- curl -k http://ratingsapp-web.aks-workshop-qa.svc/
+
+podName=$(kubectl get pod -l app=ratingsweb-pod -n primary -o jsonpath='{.items[0].metadata.name}')
+
+#Should FAIL
+kubectl exec -it $podName -n aks-workshop-dev -- curl -k http://ratingsapp-web.aks-workshop-qa.svc/
+
+#Should FAIL
+kubectl exec -it $podName -n aks-workshop-dev -- curl -k http://nginx-svc.smoke.svc/
+
+================================================================================
 
 
 
