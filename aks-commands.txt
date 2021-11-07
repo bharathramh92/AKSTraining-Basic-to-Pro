@@ -1,0 +1,408 @@
+#Local Variables
+
+baseFolderPath=""
+setupFolderPath="$baseFolderPath/Setup"
+microservicesFolderPath="$baseFolderPath/Microservices"
+tenantId=""
+subscriptionId=""
+aksResourceGroup=""
+masterResourceGroup=""
+location=""
+clusterName=""
+version=""
+acrName=""
+acrId=
+keyVaultName=""
+keyvaultId=
+objectId=
+masterVnetName=""
+masterVnetPrefix=""
+masterVnetId=
+masterSubnetName=""
+masterSubnetPrefix=""
+masterSubnetId=
+aksVnetName=""
+aksVnetPrefix=""
+aksVnetId=
+aksSubnetName=""
+aksSubnetPrefix=""
+aksSubnetId=
+aksIngressSubnetName=""
+aksIngressSubnetPrefix=""
+aksIngressSubnetId=
+appgwName=""
+appgwSubnetName=""
+appgwSubnetPrefix=""
+appgwSubnetId=
+apimName=""
+apimSubnetName=""
+apimSubnetPrefix=""
+apimSubnetId=
+sysPoolName=akssyspool
+sysPoolNodeSize="Standard_DS3_v2"
+sysPoolNodeCount=3
+sysPoolMaxPods=30
+sysPoolMaxNodeCount=5
+apiPoolName=aksapipool
+apiPoolNodeSize="Standard_DS3_v2"
+apiPoolNodeCount=3
+apiPoolMaxPods=30
+apiPoolMaxNodeCount=10
+networkPlugin=azure
+networkPolicy=azure
+vmSetType=VirtualMachineScaleSets
+addons=monitoring
+aadAdminGroupID=""
+aadTenantID=""
+spAppId=""
+spPassword=""
+masterAKSPeering="$masterVnetName-$aksVnetName-peering"
+aksMasterPeering="$aksVnetName-$masterVnetName-peering"
+masterAKSPrivateDNSLink="$masterVnetName-aks-dns-link"
+aksPrivateDNSLink="$aksVnetName-dns-link"
+aksIngControllerName=""
+aksIngControllerNSName=""
+aksIngControllerFileName="internal-ingress"
+privateDNSZoneName=""
+privateDNSZoneId=
+httpsListenerNames='("dev","qa")'
+backendIpAddress=
+aadAdminGroupIDs='("")'
+aadTenantID=""
+
+#Login to Azure
+az login --tenant $tenantId
+
+#Check Selected Subscription
+az account show
+
+#Set appropriate Subscription, if needed
+#az account set -s $subscriptionId
+
+Pre-Config - Day 0
+================================================================================
+
+#Create Service Principal
+az ad sp create-for-rbac --skip-assignment -n https://aks-train-sp
+{
+  "appId": "",
+  "displayName": "https://aks-train-sp",
+  "name": "",
+  "password": "",
+  "tenant": ""
+}
+
+#Set Service Principal variables
+spAppId=""
+spPassword=""
+
+#Create Resource Group for AKS workloads
+az group create -n $aksResourceGroup -l $location
+
+#Deploy Hub Virtual Network
+az network vnet create -n $masterVnetName -g $masterResourceGroup --address-prefixes $masterVnetPrefix
+masterVnetId=$(az network vnet show -n $masterVnetName -g $masterResourceGroup --query="id" -o tsv)
+echo $masterVnetId
+
+#Deploy Jump Server Subnet inside Hub Virtual Network
+az network vnet subnet create -n $masterSubnetName --vnet-name $masterVnetName -g $masterResourceGroup --address-prefixes $masterSubnetPrefix
+masterSubnetId=$(az network vnet subnet show -n $masterSubnetName --vnet-name $masterVnetName -g $masterResourceGroup --query="id" -o tsv)
+echo $masterSubnetId
+
+#Deploy Spoke Virtual Network
+az network vnet create -n $aksVnetName -g $aksResourceGroup --address-prefixes $aksVnetPrefix
+aksVnetId=$(az network vnet show -n $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
+echo $aksVnetId
+
+#Deploy AKS Subnet inside Spoke Virtual Network
+az network vnet subnet create -n $aksSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $aksSubnetPrefix
+aksSubnetId=$(az network vnet subnet show -n $aksSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
+echo $aksSubnetId
+
+#Deploy Ingress Subnet inside Spoke Virtual Network
+az network vnet subnet create -n $aksIngressSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $aksIngressSubnetPrefix
+aksIngressSubnetId=$(az network vnet subnet show -n $aksIngressSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
+echo $aksIngressSubnetId
+
+#Deploy Application Gateway Subnet inside Spoke Virtual Network
+az network vnet subnet create -n $appgwSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $appgwSubnetPrefix
+appgwSubnetId=$(az network vnet subnet show -n $appgwSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
+echo $appgwSubnetId
+
+#Deploy API Management Subnet inside Spoke Virtual Network
+az network vnet subnet create -n $apimSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $apimSubnetPrefix
+apimSubnetId=$(az network vnet subnet show -n $apimSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
+echo $apimSubnetId
+
+#Assign Role to Spoke Virtual Network
+az role assignment create --assignee $spAppId --role "Network Contributor" --scope $aksVnetId
+
+#Deploy ACR
+az acr create -n $acrName -g $aksResourceGroup --sku STANDARD --admin-enabled false
+acrId=$(az acr show -n $acrName -g $aksResourceGroup --query="id" -o tsv)
+echo $acrId
+
+#Assign Role to Service Principal for the ACR
+az role assignment create --assignee $spAppId --role "AcrPull" --scope $acrId
+
+#Deploy KeyVault
+az keyvault create -n $keyVaultName -g $aksResourceGroup --sku Standard
+objectId=$(az ad user show --id modatta@microsoft.com --query="objectId" -o tsv)
+
+#Set Access Policy to KeyVault for the loged in User 
+az keyvault set-policy -n $keyVaultName -g $aksResourceGroup --key-permissions get list update create delete \
+--secret-permissions get list set delete --certificate-permissions get list update create delete \
+--object-id $objectId
+keyvaultId=$(az keyvault show -n $keyVaultName -g $aksResourceGroup --query="id" -o tsv)
+
+================================================================================
+
+Setup - Day 1
+================================================================================
+
+#Create Public AKS cluster
+az aks create --name $clusterName \
+--resource-group $aksResourceGroup \
+--kubernetes-version $version --location $location \
+--vnet-subnet-id "$aksSubnetId" --enable-addons $addons \
+--node-vm-size $sysPoolNodeSize \
+--node-count $sysPoolNodeCount --max-pods $sysPoolMaxPods \
+--service-principal $spAppId \
+--client-secret $spPassword \
+--network-plugin $networkPlugin --network-policy $networkPolicy \
+--nodepool-name $sysPoolName --vm-set-type $vmSetType \
+--generate-ssh-keys \
+--enable-aad \
+--aad-admin-group-object-ids $aadAdminGroupID \
+--aad-tenant-id $aadTenantID \
+--attach-acr $acrName
+
+#Update System nodepool with AutoScaling
+az aks nodepool update --cluster-name $clusterName --resource-group $aksResourceGroup \
+--enable-cluster-autoscaler --min-count $sysPoolNodeCount --max-count $sysPoolMaxNodeCount \
+--name $sysPoolName
+
+#Connect to AKS cluster and check status
+az aks get-credentials -g $aksResourceGroup --name $clusterName --admin --overwrite
+k get ns
+
+#Create Additional Nodepool - API Nodepool
+az aks nodepool add --cluster-name $clusterName --resource-group $aksResourceGroup \
+--name $apiPoolName --kubernetes-version $version --max-pods $apiPoolMaxPods \
+--node-count $apiPoolNodeCount --node-vm-size $apiPoolNodeSize --os-type $osType \
+--mode User
+
+#Update API Nsodepool with AutoScaling
+az aks nodepool update --cluster-name $clusterName --resource-group $aksResourceGroup \
+--enable-cluster-autoscaler --min-count $apiPoolNodeCount --max-count $apiPoolMaxNodeCount \
+--name $apiPoolName
+
+================================================================================
+
+Post-Config - Day 2
+================================================================================
+
+#Secure AKS cluster
+
+#Choose a Static Private IP from $aksIngressSubnetName
+backendIpAddress=""
+
+#A Private DNS Zone is needed to resolve all Private IP addresses
+#Prepare Azure Private DNS Zone
+
+#Create Azure Private DNS Zone
+privateDNSZoneId=$(az network private-dns zone show -g $masterResourceGroup -n $privateDNSZoneName --query="id" -o tsv)
+az network private-dns zone create -n $privateDNSZoneName -g $masterResourceGroup
+
+#Add RecordSet for dev
+az network private-dns record-set a create -n dev -g $masterResourceGroup --zone-name $privateDNSZoneName
+az network private-dns record-set a add-record -a $backendIpAddress -n dev -g $masterResourceGroup -z $privateDNSZoneName
+
+#Add RecordSet for qa
+az network private-dns record-set a create -n qa -g $masterResourceGroup --zone-name $privateDNSZoneName
+az network private-dns record-set a add-record -a $backendIpAddress -n qa -g $masterResourceGroup -z $privateDNSZoneName
+
+#Add RecordSet for dmoke
+az network private-dns record-set a create -n smoke -g $masterResourceGroup --zone-name $privateDNSZoneName
+az network private-dns record-set a add-record -a $backendIpAddress -n smoke -g $masterResourceGroup -z $privateDNSZoneName
+
+#Link master Virtual Network to Private DNS Zone
+az network private-dns link vnet create -g $masterResourceGroup -n $masterAKSPrivateDNSLink -z $privateDNSZoneName -v $masterVnetId -e false
+
+#Link AKS Virtual Network to Private DNS Zone
+az network private-dns link vnet create -g $aksResourceGroup -n $aksPrivateDNSLink -z $privateDNSZoneName -v $aksVnetId -e false
+
+#Create Ingress Namespace
+kubectl create namespace $aksIngControllerNSName
+kubectl label namespace $aksIngControllerNSName name=$aksIngControllerNSName
+
+#Install nginx as ILB using Helm
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+#Install Ingress controller
+helm install $aksIngControllerName ingress-nginx/ingress-nginx --namespace $aksIngControllerNSName \
+
+#Specify configuration values for Ingress controller 
+-f $ingControllerFilePath \
+
+#Ensures Private IP for Nginx Ingress Controller
+--set controller.service.loadBalancerIP=$backendIpAddress \
+
+#Ensures that the Nginx Ingress Controller is deployed only on System pool (Good practice)
+--set controller.nodeSelector.agentpool=$sysPoolName \
+--set controller.defaultBackend.nodeSelector.agentpool=$sysPoolName \
+
+#Specify the Subnet from Ingress controller should pick IP addresses (Good practice)
+--set controller.service.annotations.'service\.beta\.kubernetes\.io/azure-load-balancer-internal-subnet'=$aksIngressSubnetName
+
+#Create Namespaces for AKS cluster
+kubectl create ns aks-workshop-dev // DEV workloads
+kubectl create ns aks-workshop-qa // QA workloads
+kubectl create ns smoke // Smoke Test
+
+/*
+#Deploy Application Gateway
+az deployment group create -f ./aksauto-appgw-deploy.bicep -g $aksResourceGroup \
+--parameters @./aksauto-appgw-deploy.parameters.json \
+--parameters applicationGatewayName=$appgwName \
+vnetName=$aksVnetName subnetName=$appgwSubnetName \
+httpsListenerNames=$httpsListenerNames \
+backendIpAddress=$backendIpAddress
+*/
+
+#Create Application Gateway from Azure Portal
+<Steps from endtoendSSL.md>
+#backend pool of app gateway points to Private IP of Nginx Ingress Controller
+
+#Deploy RBAC for the AKS cluster
+helm create rbac-chart
+
+helm install rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
+#helm upgrade rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
+
+helm install rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
+#helm upgrade rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
+
+#helm uninstall rbac-chart
+
+#Deploy Ingress Rule object for the AKS cluster
+helm create ingress-chart
+
+helm install  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+#helm upgrade  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+
+helm uninstall ingress-chart -n aks-workshop-dev
+
+helm install  ingress-chart -n aks-workshop-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
+#helm upgrade  ingress-chart -n aks-workshop-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
+
+#helm uninstall ingress-chart -n aks-workshop-qa
+
+helm create smoke-ingress-chart
+
+helm install  smoke-ingress-chart -n smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
+#helm upgrade  smoke-ingress-chart -n smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
+
+#helm uninstall smoke-ingress-chart -n smoke
+
+#Test Cluster Health and end-to-end connectivity
+#Deploy Nginx app in Smoke Namespace
+
+az acr import -n $acrName --source docker.io/library/nginx:alpine -t nginx:alpine (Public)
+az acr import -n $acrName --source docker.io/library/nginx:alpine -t nginx:alpine (Private)
+
+helm create smoke-tests-chart
+
+helm install smoke-tests-chart -n smoke $setupFolderPath/Tests/smoke-tests-chart/ -f $setupFolderPath/Tests/smoke-tests-chart/values-smoke.yaml
+#helm upgrade smoke-tests-chart -n smoke $setupFolderPath/Tests/smoke-tests-chart/ -f $setupFolderPath/Tests/smoke-tests-chart/values-smoke.yaml
+
+#helm uninstall smoke-tests-chart -n smoke
+
+#Call Nginx app Url; check end-to-end connectivity
+curl -k https://<appgw-dns-name>/nginx
+
+================================================================================
+
+#Deploy more apps - Ratings app
+
+#Deploy backend Mongo DB as container
+kubectl create ns db --context=$CTX_CLUSTER1
+
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm search repo bitnami
+
+helm install ratingsdb bitnami/mongodb -n db \
+--set auth.username=ratingsuser,auth.password=ratingspwd,auth.database=ratingsdb \
+--set controller.nodeSelector.agentpool=$sysPoolName \
+--set controller.defaultBackend.nodeSelector.agentpool=$sysPoolName
+
+#Remove backend Mongo DB container
+#helm uninstall ratingsdb
+
+#RatingsApi - Ratings API backend 
+
+#Clone/Fork/Download Souerce code
+https://github.com/monojit18/mslearn-aks-workshop-ratings-api.git
+
+#CD to the director where Dockerfile exists
+#This docker build but performed in a Cloud Agent(VM) by ACR
+az acr build -t $acrName.azurecr.io/ratings-api:v1.0.0 -r $acrName .
+
+kubectl create secret generic aks-workshop-mongo-secret -n aks-workshop-dev --context=$CTX_CLUSTER1 \
+--from-literal=MONGOCONNECTION="mongodb://ratingsuser:ratingspwd@ratingsdb-mongodb.db:27017/ratingsdb"
+
+#Change <acrName> in the $helmPath/ratingsapi-chart/values-dev.yaml
+#Change <agentpool> in the $helmPath/ratingsapi-chart/values-dev.yaml
+helm install ratingsapi-chart -n aks-workshop-dev $helmPath/ratingsapi-chart/ -f $helmPath/ratingsapi-chart/values-dev.yaml
+helm upgrade ratingsapi-chart -n aks-workshop-dev $helmPath/ratingsapi-chart/ -f $helmPath/ratingsapi-chart/values-dev.yaml
+
+#Remove RatinsgAPI app 
+#helm uninstall ratingsapi-chart -n aks-workshop-dev
+
+#RatingsWeb - Ratings App Frontend
+#Clone/Fork/Download Souerce code
+https://github.com/monojit18/mslearn-aks-workshop-ratings-web.git
+
+#CD to the director where Dockerfile exists
+#This docker build but performed in a Cloud Agent(VM) by ACR
+az acr build -t $acrName.azurecr.io/ratings-web:v1.0.0 -r $acrName .
+
+#Change <acrName> in the $helmPath/ratingsapi-chart/values-dev.yaml
+#Change <agentpool> in the $helmPath/ratingsapi-chart/values-dev.yaml
+helm install ratingsweb-chart -n aks-workshop-dev $helmPath/ratingsweb-chart/ -f $helmPath/ratingsweb-chart/values-dev.yaml
+helm upgrade ratingsweb-chart -n aks-workshop-dev $helmPath/ratingsweb-chart/ -f $helmPath/ratingsweb-chart/values-dev.yaml
+
+#helm uninstall ratingsweb-chart -n aks-workshop-dev
+
+================================================================================
+
+
+
+
+
+
+#Azure Monitor with Prometheus
+https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-prometheus-integration#configure-and-deploy-configmaps
+
+#Prometheus config map
+https://aka.ms/container-azm-ms-agentconfig
+
+#JMeter Aks cluster Load testing
+https://techcommunity.microsoft.com/t5/azure-global/scalable-apache-jmeter-test-framework-using-azure-kubernetes/ba-p/1197379
+
+
+#Cleanup resources - Individual
+
+#az aks delete -g $aksResourceGroup -n $clusterName --yes
+#az acr delete -g $aksResourceGroup -n $acrName --yes
+#az keyvault delete -g $aksResourceGroup -n $keyVaultName --yes
+#az network application-gateway delete -g $aksResourceGroup -n $aksVnetName --yes
+#az network vnet delete -g $aksResourceGroup -n $aksVnetName --yes
+
+#Cleanup resources - All
+
+#az group delete -n $aksResourceGroup --yes
+
+
+
