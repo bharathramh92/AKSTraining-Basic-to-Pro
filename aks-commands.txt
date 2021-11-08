@@ -887,7 +887,7 @@ Features
   - Multi Cluster Connecitivity
 
 Remove Nginx Ingress Controller
-#The in-built Ingress Gateway from Service mesh would be used
+- The in-built Ingress Gateway from Service mesh would be used
 
 #Set CLI Variables for Istio
 ================================================================================
