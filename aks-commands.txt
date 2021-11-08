@@ -102,12 +102,12 @@ spPassword=""
 #Create Resource Group for AKS workloads
 az group create -n $aksResourceGroup -l $location
 
+[Diagram - CNI]
+
 #Deploy Hub Virtual Network
 az network vnet create -n $masterVnetName -g $masterResourceGroup --address-prefixes $masterVnetPrefix
 masterVnetId=$(az network vnet show -n $masterVnetName -g $masterResourceGroup --query="id" -o tsv)
 echo $masterVnetId
-
-[Diagram - hubspoke- TBD]
 
 #Deploy Jump Server Subnet inside Hub Virtual Network
 az network vnet subnet create -n $masterSubnetName --vnet-name $masterVnetName -g $masterResourceGroup --address-prefixes $masterSubnetPrefix
@@ -182,14 +182,17 @@ az aks create --name $clusterName \
 --aad-tenant-id $aadTenantID \
 --attach-acr $acrName
 
+#Connect to AKS cluster and check status
+az aks get-credentials -g $aksResourceGroup --name $clusterName --admin --overwrite
+kubectl get ns
+
+#Connect to AKS cluster as Admin
+az aks get-credentials -g $resourceGroup -n $clusterName --admin
+
 #Update System nodepool with AutoScaling
 az aks nodepool update --cluster-name $clusterName --resource-group $aksResourceGroup \
 --enable-cluster-autoscaler --min-count $sysPoolNodeCount --max-count $sysPoolMaxNodeCount \
 --name $sysPoolName
-
-#Connect to AKS cluster and check status
-az aks get-credentials -g $aksResourceGroup --name $clusterName --admin --overwrite
-k get ns
 
 #Create Additional Nodepool - API Nodepool
 az aks nodepool add --cluster-name $clusterName --resource-group $aksResourceGroup \
@@ -263,7 +266,7 @@ helm install $aksIngControllerName ingress-nginx/ingress-nginx --namespace $aksI
 #Specify the Subnet from Ingress controller should pick IP addresses (Good practice)
 --set controller.service.annotations.'service\.beta\.kubernetes\.io/azure-load-balancer-internal-subnet'=$aksIngressSubnetName
 
-#Create Namespaces for AKS cluster
+#Create Namespaces
 kubectl create ns aks-workshop-dev // DEV workloads
 kubectl create ns aks-workshop-qa // QA workloads
 kubectl create ns smoke // Smoke Test
@@ -475,7 +478,7 @@ kubectl exec -it $podName -n aks-workshop-dev -- curl -k http://nginx-svc.smoke.
 
 Cluster Health
 Node and Pod Health
-Workload Deployments
+Observe and Analyze Workload Deployments
 
 [Multiple Screenshots]
 
