@@ -377,6 +377,14 @@
 
   - **Observability**
 
+    ![service-mirros](./Assets/istio-metrics-graph.png)
+
+    
+
+    ![service-mirros](./Assets/istio-fault.png)
+
+    
+
     ```bash
     #Deploy Apps to view in Istio
     
