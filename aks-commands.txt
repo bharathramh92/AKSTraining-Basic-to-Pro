@@ -509,6 +509,24 @@ https://techcommunity.microsoft.com/t5/azure-global/scalable-apache-jmeter-test-
 
 ================================================================================
 
+RBAC
+================================================================================
+#Deploy RBAC for the AKS cluster
+helm create rbac-chart
+
+helm install rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
+
+#helm upgrade rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
+helm install rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
+
+#helm upgrade rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
+#helm uninstall rbac-chart
+
+#Check access by multiple login ids
+
+================================================================================
+
+
 Cluster Upgrade
 ================================================================================
 [Diagram - TBD]
@@ -833,6 +851,15 @@ helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciq
 
 #Uninstall KEDA
 #helm uninstall keda -n keda
+
+================================================================================
+
+Azure Policy
+================================================================================
+Refer Here:
+https://docs.microsoft.com/en-us/azure/aks/policy-reference
+https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes
+
 
 ================================================================================
 
