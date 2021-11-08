@@ -1,6 +1,5 @@
 AKS - BASIC TO ADVANCED
 ================================================================================================================================================================
-
 #Local Variables
 
 baseFolderPath=""
@@ -84,6 +83,7 @@ az account show
 
 Pre-Config - Day 0
 ================================================================================
+[Diagram - main]
 
 #Create Service Principal
 az ad sp create-for-rbac --skip-assignment -n https://aks-train-sp
@@ -106,6 +106,8 @@ az group create -n $aksResourceGroup -l $location
 az network vnet create -n $masterVnetName -g $masterResourceGroup --address-prefixes $masterVnetPrefix
 masterVnetId=$(az network vnet show -n $masterVnetName -g $masterResourceGroup --query="id" -o tsv)
 echo $masterVnetId
+
+[Diagram - hubspoke- TBD]
 
 #Deploy Jump Server Subnet inside Hub Virtual Network
 az network vnet subnet create -n $masterSubnetName --vnet-name $masterVnetName -g $masterResourceGroup --address-prefixes $masterSubnetPrefix
@@ -207,6 +209,8 @@ Post-Config - Day 2
 
 #Secure AKS cluster
 
+[Diagram - aks+appgw]
+
 #Choose a Static Private IP from $aksIngressSubnetName
 backendIpAddress=""
 
@@ -276,22 +280,11 @@ backendIpAddress=$backendIpAddress
 
 Application Gateway
 =====================
+[Diagram - appgw - multiple]
+
 #Create Application Gateway from Azure Portal
 <Steps from endtoendSSL.md>
 #backend pool of app gateway points to Private IP of Nginx Ingress Controller
-
-RBAC
-=====================
-#Deploy RBAC for the AKS cluster
-helm create rbac-chart
-
-helm install rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
-
-#helm upgrade rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
-helm install rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
-
-#helm upgrade rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
-#helm uninstall rbac-chart
 
 Ingress - Smoke
 =====================
@@ -325,6 +318,7 @@ curl -k https://smoke-<appgw-dns-name>/nginx
 
 Ratings App - DEV
 =====================
+[Diagram - RatingsApp]
 #Deploy more apps - Ratings app
 
 #Deploy backend Mongo DB as container
@@ -428,6 +422,8 @@ curl -k https://qa-<appgw-dns-name>/
 
 Network Policies - DEV
 =========================
+[Diagram - Network Policy]
+
 #East-West Traffic Security
 helm install netpol-chart -n aks-workshop-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
 
@@ -481,6 +477,8 @@ Cluster Health
 Node and Pod Health
 Workload Deployments
 
+[Multiple Screenshots]
+
 
 #Enable Prometheus for AKS
 #Azure Monitor with Prometheus
@@ -490,6 +488,9 @@ https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insigh
 https://aka.ms/container-azm-ms-agentconfig
 
 =========================================================
+
+[Multiple Screenshots]
+
 #AKS Monitoring with Grafana
 https://github.com/grafana/helm-charts/blob/main/charts/grafana/README.md
 
@@ -510,6 +511,8 @@ https://techcommunity.microsoft.com/t5/azure-global/scalable-apache-jmeter-test-
 
 Cluster Upgrade
 ================================================================================
+[Diagram - TBD]
+
 Refer Here: https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster
 
 #Max surge
@@ -586,6 +589,8 @@ AKS - ADVANCED TO PRO
 ================================================================================================================================================================
 #Pre-Requisites
 ================================================================================
+[Diagram - Main]
+
 Gone thru the exercises of Basic to Advanced
 
 AKS cluster already created
@@ -705,6 +710,8 @@ az account show
 
 API Management
 ================================================================================
+[diagram - AKS+APIM]
+
 #API Management deployment
 Install API Management through Azure Portal
 
@@ -744,6 +751,8 @@ Check Metrics in Azure Portal
 
 KEDA
 ================================================================================
+[Diagram - KEDA Arch]
+
 #Kubernetes based Event Driven AutoScaling - Severless, Event Driven Apps
 
 Refer Here - https://keda.sh/docs/2.4/deploy/
@@ -829,6 +838,8 @@ helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciq
 
 Service Mesh
 ================================================================================
+[From ServiceMeshWorkshop.md]
+
 #Service Mesh deployment
 
 What it is?
