@@ -512,6 +512,29 @@ Cluster Upgrade
 ================================================================================
 Refer Here: https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster
 
+#Max surge
+How Many Additional Nodes to add while Upgrade in progress?
+Default = 1
+Standard/Optial = 33% (of existing no. of nodes in Nodepool)
+This value can be Integer as well as Percentage
+
+During an upgrade
+- Minimum of Max Surge can be 1
+- Maximum of Max Surge can be equal to the number of nodes in your node pool
+Larger values can be set but the maximum number of nodes used for max surge won't be higher than the number of nodes in the pool at the time of upgrade.
+
+#Steps
+
+- Add a new buffer node (or as many nodes as configured in max surge) to the cluster that runs the specified Kubernetes version
+
+- Cordon and drain one of the old nodes to minimize disruption to running applications (if you're using max surge it will cordon and drain as many nodes at the same time as the number of buffer nodes specified).
+
+- When the old node is fully drained, it will be reimaged to receive the new version and it will become the buffer node for the following node to be upgraded
+
+- This process repeats until all nodes in the cluster have been upgraded
+
+- At the end of the process, the last buffer node will be deleted, maintaining the existing agent node count and zone balance
+
 $upgradeVersion=""
 
 az aks get-upgrades --resource-group $aksResourceGroup --name $clusterName --output table
@@ -530,13 +553,14 @@ kubectl describe nodes <NodeName>
 #Update All Nodes in All Nodepools
 az aks upgrade --resource-group $aksResourceGroup --name $clusterName --node-image-only
 
-#Update All Nodes in a specific Nodepool
+#Update All Nodes in a specific Nodepool (Not recommened!!)
 $nodepoolToUpgrade=""
 az aks upgrade --resource-group $aksResourceGroup --name $clusterName --node-image-only
 az aks nodepool upgrade --resource-group $aksResourceGroup --name $clusterName --name $nodepoolToUpgrade --node-image-only
 
-
-
+#Upgrade with additional Nodes to avoid any downtime
+az aks nodepool upgrade --resource-group $aksResourceGroup --name $clusterName --name $nodepoolToUpgrade \
+    --max-surge 33% --node-image-only --no-wait
 
 
 ================================================================================
