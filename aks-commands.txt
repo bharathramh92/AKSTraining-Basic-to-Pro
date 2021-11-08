@@ -679,6 +679,27 @@ Check Metrics in Azure Portal
 
 ================================================================================
 
+KEDA
+================================================================================
+#Kubernetes based Event Driven AutoScaling - Severless, Event Driven Apps
+
+Refer Here - https://keda.sh/docs/2.4/deploy/
+
+Add Helm repo
+- helm repo add kedacore https://kedacore.github.io/charts
+
+Update Helm repo
+- helm repo update
+
+Install keda Helm chart
+- kubectl create namespace keda
+- helm install keda kedacore/keda --namespace keda
+
+#Uninstall KEDA
+#helm uninstall keda -n keda
+
+================================================================================
+
 Service Mesh
 ================================================================================
 #Service Mesh deployment
