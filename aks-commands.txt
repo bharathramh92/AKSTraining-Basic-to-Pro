@@ -1,3 +1,6 @@
+AKS - BASIC TO ADVANCED
+================================================================================================================================================================
+
 #Local Variables
 
 baseFolderPath=""
@@ -467,17 +470,38 @@ kubectl exec -it $podName -n aks-workshop-dev -- curl -k http://ratingsapp-web.a
 kubectl exec -it $podName -n aks-workshop-dev -- curl -k http://nginx-svc.smoke.svc/
 
 ================================================================================
+#View Metrics from Azure Portal
+#View Insights from Azure Portal
+#Create a Dashboard in Azure Portal
+#Log Analytics with Container Insights
+#Select Pre-defined Queries and Check Results
+#Create Azure Monitor Workbook and View Results
 
-
-
+#Enable Prometheus for AKS
 #Azure Monitor with Prometheus
 https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-prometheus-integration#configure-and-deploy-configmaps
 
 #Prometheus config map
 https://aka.ms/container-azm-ms-agentconfig
 
-#JMeter Aks cluster Load testing
+=========================================================
+#AKS Monitoring with Grafana
+https://github.com/grafana/helm-charts/blob/main/charts/grafana/README.md
+
+#Integrate Grafan with Azure Monitor
+https://grafana.com/grafana/plugins/grafana-azure-monitor-datasource/
+
+
+================================================================================
+#Load testing with JMeter
 https://techcommunity.microsoft.com/t5/azure-global/scalable-apache-jmeter-test-framework-using-azure-kubernetes/ba-p/1197379
+
+
+#UNCOMMENT: HPA in .helmignore for RatingsApi app
+#Redeploy RatingsApi app
+#Open JMeter
+
+================================================================================
 
 
 #Cleanup resources - Individual
@@ -489,8 +513,150 @@ https://techcommunity.microsoft.com/t5/azure-global/scalable-apache-jmeter-test-
 #az network vnet delete -g $aksResourceGroup -n $aksVnetName --yes
 
 #Cleanup resources - All
-
 #az group delete -n $aksResourceGroup --yes
 
+================================================================================================================================================================
+
+
+
+AKS - ADVANCED TO PRO
+================================================================================================================================================================
+#Pre-Requisites
+================================================================================
+Gone thru the exercises of Basic to Advanced
+
+AKS cluster already created
+
+3 Namespaces created
+- aks-workshop-dev
+- aks-workshop-qa
+- smoke
+
+Applications Deployed
+- Ratings App (DEV and QA)
+- Nginx App (Smoke)
+
+Nginx Ingress Controller deployed; with Private IP
+
+API routing is happening thru K8s Ingress rules
+
+Network Policies deployed for East-West traffic
+- Successfully Tested with various configurations
+
+Monitoring enabled
+- Azure Monitor
+- Log Analytics
+- Grafana (Integrated with Azure Monitor)
+
+End to End connectivity established
+- Application Gateway as Public facing L7 LoadBalancer
+- Multi-Tenancy implemnented tru Application Gateway Listeners and Http Settings
+
+Load Testing
+- JMeter Local
+- JMX files created for RatingsApi app 
+- HPA for RatingsApi enabled
+- Successfully Tested with Load
+
+================================================================================
+#Local Variables
+
+baseFolderPath=""
+setupFolderPath="$baseFolderPath/Setup"
+microservicesFolderPath="$baseFolderPath/Microservices"
+tenantId=""
+subscriptionId=""
+aksResourceGroup=""
+masterResourceGroup=""
+location=""
+clusterName=""
+version=""
+acrName=""
+acrId=
+keyVaultName=""
+keyvaultId=
+objectId=
+masterVnetName=""
+masterVnetPrefix=""
+masterVnetId=
+masterSubnetName=""
+masterSubnetPrefix=""
+masterSubnetId=
+aksVnetName=""
+aksVnetPrefix=""
+aksVnetId=
+aksSubnetName=""
+aksSubnetPrefix=""
+aksSubnetId=
+aksIngressSubnetName=""
+aksIngressSubnetPrefix=""
+aksIngressSubnetId=
+appgwName=""
+appgwSubnetName=""
+appgwSubnetPrefix=""
+appgwSubnetId=
+apimName=""
+apimSubnetName=""
+apimSubnetPrefix=""
+apimSubnetId=
+sysPoolName=akssyspool
+sysPoolNodeSize="Standard_DS3_v2"
+sysPoolNodeCount=3
+sysPoolMaxPods=30
+sysPoolMaxNodeCount=5
+apiPoolName=aksapipool
+apiPoolNodeSize="Standard_DS3_v2"
+apiPoolNodeCount=3
+apiPoolMaxPods=30
+apiPoolMaxNodeCount=10
+networkPlugin=azure
+networkPolicy=azure
+vmSetType=VirtualMachineScaleSets
+addons=monitoring
+aadAdminGroupID=""
+aadTenantID=""
+spAppId=""
+spPassword=""
+masterAKSPeering="$masterVnetName-$aksVnetName-peering"
+aksMasterPeering="$aksVnetName-$masterVnetName-peering"
+masterAKSPrivateDNSLink="$masterVnetName-aks-dns-link"
+aksPrivateDNSLink="$aksVnetName-dns-link"
+aksIngControllerName=""
+aksIngControllerNSName=""
+aksIngControllerFileName="internal-ingress"
+privateDNSZoneName=""
+privateDNSZoneId=
+httpsListenerNames='("dev","qa")'
+backendIpAddress=
+aadAdminGroupIDs='("")'
+aadTenantID=""
+
+#Login to Azure
+az login --tenant $tenantId
+
+#Check Selected Subscription
+az account show
+
+#Set appropriate Subscription, if needed
+#az account set -s $subscriptionId
+
+API Management
+================================================================================
+#API Management deployment
+Install API Management through Azure Portal
+
+Move APIM into a Subnet (already created in previous exercise)
+- A private IP is assigned to APIM instance
+
+A Custom Domian for APIM is configured
+- Using a proper DNS certificate
+- LetsEncrypt Certificates can also be used
+
+Modify Application Gateway backend pool to point to this Private IP
+(Earlier it was pointing to Private IP of Nginx Ingress)
+
+Modify Http Settings of Application Gateway to point all traffic to APIM
+
+Modify Health Probe accordingly
 
 
