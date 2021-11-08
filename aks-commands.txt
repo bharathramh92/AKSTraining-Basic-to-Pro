@@ -477,6 +477,11 @@ kubectl exec -it $podName -n aks-workshop-dev -- curl -k http://nginx-svc.smoke.
 #Select Pre-defined Queries and Check Results
 #Create Azure Monitor Workbook and View Results
 
+Cluster Health
+Node and Pod Health
+Workload Deployments
+
+
 #Enable Prometheus for AKS
 #Azure Monitor with Prometheus
 https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-prometheus-integration#configure-and-deploy-configmaps
@@ -503,9 +508,42 @@ https://techcommunity.microsoft.com/t5/azure-global/scalable-apache-jmeter-test-
 
 ================================================================================
 
+Cluster Upgrade
+================================================================================
+Refer Here: https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster
+
+$upgradeVersion=""
+
+az aks get-upgrades --resource-group $aksResourceGroup --name $clusterName --output table
+az aks upgrade --resource-group $aksResourceGroup --name $clusterName --kubernetes-version $upgradeVersion
+
+#Check if Upgrade is successful
+az aks show --resource-group $aksResourceGroup --name $clusterName --output table
+
+================================================================================
+
+Node Image Upgrade
+================================================================================
+#Check Node details
+kubectl describe nodes <NodeName>
+
+#Update All Nodes in All Nodepools
+az aks upgrade --resource-group $aksResourceGroup --name $clusterName --node-image-only
+
+#Update All Nodes in a specific Nodepool
+$nodepoolToUpgrade=""
+az aks upgrade --resource-group $aksResourceGroup --name $clusterName --node-image-only
+az aks nodepool upgrade --resource-group $aksResourceGroup --name $clusterName --name $nodepoolToUpgrade --node-image-only
+
+
+
+
+
+================================================================================
+
 
 #Cleanup resources - Individual
-
+================================================================================
 #az aks delete -g $aksResourceGroup -n $clusterName --yes
 #az acr delete -g $aksResourceGroup -n $acrName --yes
 #az keyvault delete -g $aksResourceGroup -n $keyVaultName --yes
@@ -513,6 +551,7 @@ https://techcommunity.microsoft.com/t5/azure-global/scalable-apache-jmeter-test-
 #az network vnet delete -g $aksResourceGroup -n $aksVnetName --yes
 
 #Cleanup resources - All
+================================================================================
 #az group delete -n $aksResourceGroup --yes
 
 ================================================================================================================================================================
@@ -685,15 +724,79 @@ KEDA
 
 Refer Here - https://keda.sh/docs/2.4/deploy/
 
-Add Helm repo
-- helm repo add kedacore https://kedacore.github.io/charts
+#Add Helm repo
+helm repo add kedacore https://kedacore.github.io/charts
 
-Update Helm repo
-- helm repo update
+#Update Helm repo
+helm repo update
 
-Install keda Helm chart
-- kubectl create namespace keda
-- helm install keda kedacore/keda --namespace keda
+#Install keda Helm chart
+kubectl create namespace keda
+helm install keda kedacore/keda --namespace keda
+
+#Create Namespace for Serverless apps
+kubectl create ns serverless
+
+#Create a Storage Account in Azure Portal - kedateststg
+#Create a Blob Container in Azure Portal - kedablob
+#Create a Queue Container in Azure Portal - kedaqueue
+
+#Note down the Connection String of the storage account
+#This would be added as K8s secret inside the AKS cluster
+kubetcl create secret generic keda-stg-secret -n serverless --from-literal=AzureWebJobsStorage="<Blob-Connection-String>"
+
+ACIBlobApp
+================================================================================
+#Deploy ACIBlobApp in serverless namespace
+#App reacts to Blob events
+helm install aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-chart/ -f $microservicesFolderPath/Helms/aciblobapp-chart/AKSWorkshop/values-dev.yaml
+
+#helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-chart/ -f $microservicesFolderPath/Helms/aciblobapp-chart/AKSWorkshop/values-dev.yaml
+#helm uninstall aciblobapp-chart -n serverless
+
+#Check if app is deployed and no. of replicas running
+kubectl get all -n serverless
+
+#Modify the values-dev.yaml file to update placeholder values
+
+#Deploy KEDA objects in serverless namespace
+#These objects would ensure that the application scales based on Blob trigger
+helm install aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-keda-chart/ -f $microservicesFolderPath/Helms/aciblobapp-keda-chart/AKSWorkshop/values-dev.yaml
+
+#helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-keda-chart/ -f $microservicesFolderPath/Helms/aciblobapp-keda-chart/AKSWorkshop/values-dev.yaml
+#helm uninstall aciblobapp-chart -n serverless
+
+#Keep adding large no. of images into Blob Container
+#Check ACIBlobApp deployment on AKS cluster
+#Watch how replicas are scaling up and down
+================================================================================
+
+ACIQueueApp
+================================================================================
+#Deploy ACIQueueApp in serverless namespace
+#App reacts to Blob events
+helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/AKSWorkshop/values-dev.yaml
+
+#helm upgrade aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/AKSWorkshop/values-dev.yaml
+#helm uninstall aciqueueapp-chart -n serverless
+
+#Check if app is deployed and no. of replicas running
+kubectl get all -n serverless
+
+#Modify the values-dev.yaml file to update placeholder values
+
+#Deploy KEDA objects in serverless namespace
+#These objects would ensure that the application scales based on Blob trigger
+helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-keda-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-keda-chart/AKSWorkshop/values-dev.yaml
+
+#helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-keda-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-keda-chart/AKSWorkshop/values-dev.yaml
+#helm uninstall aciqueueapp-chart -n serverless
+
+#Keep adding large no. of messages into Queue Container
+#Check ACIQueueApp deployment on AKS cluster
+#Watch how replicas are scaling up and down
+
+================================================================================
 
 #Uninstall KEDA
 #helm uninstall keda -n keda
