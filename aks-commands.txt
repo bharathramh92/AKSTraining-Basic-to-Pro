@@ -659,4 +659,25 @@ Modify Http Settings of Application Gateway to point all traffic to APIM
 
 Modify Health Probe accordingly
 
+Define APIs behind APIM
 
+Check end-to-end connectivity
+
+Configure OAuth for APIM
+- Configure APIs with OAuth definition
+- Add Policies for JWT header validation
+- Authenticate Each API
+- Generate Bearer Token by making a call to Azure AD Graph API (POSTMAN or any REST client can be used)
+- Pass this Token with the Authorization header of each API call
+- APIM policies should allow/reject API calls accordingly
+
+Check end-to-end connectivity
+
+Enable Application Insights in APIM
+
+Check Metrics in Azure Portal
+
+================================================================================
+
+Service Mesh
+================================================================================
