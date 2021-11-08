@@ -469,16 +469,15 @@ kubectl exec -it $podName -n aks-workshop-dev -- curl -k http://ratingsapp-web.a
 kubectl exec -it $podName -n aks-workshop-dev -- curl -k http://nginx-svc.smoke.svc/
 
 ================================================================================
-#View Metrics from Azure Portal
-#View Insights from Azure Portal
-#Create a Dashboard in Azure Portal
-#Log Analytics with Container Insights
-#Select Pre-defined Queries and Check Results
-#Create Azure Monitor Workbook and View Results
-
 Cluster Health
 Node and Pod Health
 Observe and Analyze Workload Deployments
+  #View Metrics from Azure Portal
+  #View Insights from Azure Portal
+  #Create a Dashboard in Azure Portal
+  #Log Analytics with Container Insights
+  #Select Pre-defined Queries and Check Results
+  #Create Azure Monitor Workbook and View Results
 
 [Multiple Screenshots]
 
