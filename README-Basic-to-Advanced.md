@@ -544,8 +544,6 @@
   - **Network Policies - Smoke**
 
     ```bash
-    
-    =========================
     helm install netpol-chart -n smoke $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-smoke.yaml
     
     #helm upgrade netpol-chart -n smoke $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-smoke.yaml
@@ -575,5 +573,152 @@
 
 - **Monitoring and Logging**
 
+  - **Cluster Health**
+
+  - **Node and Pod Health**
+
+  - **Observe and Analyze Workload Deployments**
+
+    - View Metrics from Azure Portal
+
+    - View Insights from Azure Portal
+
+    - Create a Dashboard in Azure Portal
+
+    - Log Analytics with Container Insights
+
+    - Select Pre-defined Queries and Check Results
+
+    - Create Azure Monitor Workbook and View Results
+
+      [Multiple Screenshots - TBD]
+
+  - **Enable Prometheus for AKS**
+
+    ```bash
+    #Azure Monitor with Prometheus
+    https://docs.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-prometheus-integration#configure-and-deploy-configmaps
+    
+    #Prometheus config map
+    https://aka.ms/container-azm-ms-agentconfig
+    ```
+
+  - **Monitoring with Grafana**
+
+    ```bash
+    #AKS Monitoring with Grafana
+    https://github.com/grafana/helm-charts/blob/main/charts/grafana/README.md
+    
+    #Integrate Grafan with Azure Monitor
+    https://grafana.com/grafana/plugins/grafana-azure-monitor-datasource/
+    ```
+
+    
+
+- **Load Testing**
+
+  ![jmeter-aks](./Assets/jmeter-aks.jpeg)
+
+  ```bash
+  #Load testing with JMeter
+  https://techcommunity.microsoft.com/t5/azure-global/scalable-apache-jmeter-test-framework-using-azure-kubernetes/ba-p/1197379
   
+  
+  #UNCOMMENT: HPA in .helmignore for RatingsApi app
+  #Redeploy RatingsApi app
+  #Open JMeter
+  ```
+
+- **RBAC**
+
+  ```bash
+  #Deploy RBAC for the AKS cluster
+  helm create rbac-chart
+  
+  helm install rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
+  
+  #helm upgrade rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
+  helm install rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
+  
+  #helm upgrade rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
+  #helm uninstall rbac-chart
+  
+  #Check access by multiple login ids
+  ```
+
+- **Cluster Upgrade**
+
+  - Refer [Here](https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster)
+
+  - **Max surge**
+
+    - How Many Additional Nodes to add while Upgrade in progress?
+      - **Default** = 1
+      - **Standard/Optimal** = 33% (of existing no. of nodes in Nodepool)
+        - This value can be Integer as well as Percentage
+
+  - **During an upgrade**
+
+    - Minimum of Max Surge can be 1
+    - Maximum of Max Surge can be equal to the number of nodes in your node pool
+    - Larger values can be set but the maximum number of nodes used for max surge won't be higher than the number of nodes in the pool at the time of upgrade
+
+  - **Steps**
+
+    - Add a new buffer node (or as many nodes as configured in max surge) to the cluster that runs the specified Kubernetes version
+    - Cordon and drain one of the old nodes to minimize disruption to running applications (if you're using max surge it will cordon and drain as many nodes at the same time as the number of buffer nodes specified).
+    - When the old node is fully drained, it will be reimaged to receive the new version and it will become the buffer node for the following node to be upgraded
+    - This process repeats until all nodes in the cluster have been upgraded
+    - At the end of the process, the last buffer node will be deleted, maintaining the existing agent node count and zone balance
+
+    ```bash
+    $upgradeVersion=""
+    
+    az aks get-upgrades --resource-group $aksResourceGroup --name $clusterName --output table
+    az aks upgrade --resource-group $aksResourceGroup --name $clusterName --kubernetes-version $upgradeVersion
+    
+    #Check if Upgrade is successful
+    az aks show --resource-group $aksResourceGroup --name $clusterName --output table
+    ```
+
+- **Node Image Upgrade**
+
+  ```bash
+  #Check Node details
+  kubectl describe nodes <NodeName>
+  
+  #Update All Nodes in All Nodepools
+  az aks upgrade --resource-group $aksResourceGroup --name $clusterName --node-image-only
+  
+  #Update All Nodes in a specific Nodepool (Not recommened!!)
+  $nodepoolToUpgrade=""
+  az aks upgrade --resource-group $aksResourceGroup --name $clusterName --node-image-only
+  az aks nodepool upgrade --resource-group $aksResourceGroup --name $clusterName --name $nodepoolToUpgrade --node-image-only
+  
+  #Upgrade with additional Nodes to avoid any downtime
+  az aks nodepool upgrade --resource-group $aksResourceGroup --name $clusterName --name $nodepoolToUpgrade \
+      --max-surge 33% --node-image-only --no-wait
+  ```
+
+- **Cleanup resources**
+
+  ```bash
+  #Cleanup resources - Individual
+  
+  #az aks delete -g $aksResourceGroup -n $clusterName --yes
+  #az acr delete -g $aksResourceGroup -n $acrName --yes
+  #az keyvault delete -g $aksResourceGroup -n $keyVaultName --yes
+  #az network application-gateway delete -g $aksResourceGroup -n $aksVnetName --yes
+  #az network vnet delete -g $aksResourceGroup -n $aksVnetName --yes
+  
+  #Cleanup resources - All
+  
+  #az group delete -n $aksResourceGroup --yes
+  ```
+
+
+
+## References
+
+[TBD]
 
