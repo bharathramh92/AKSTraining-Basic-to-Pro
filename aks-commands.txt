@@ -2,39 +2,40 @@ AKS - BASIC TO ADVANCED
 ================================================================================================================================================================
 #Local Variables
 
-baseFolderPath=""
+baseFolderPath="/Users/monojitdattams/Development/Projects/Workshops/AKSWorkshop/AKSTraining-Basic-to-Pro/Deployments"
 setupFolderPath="$baseFolderPath/Setup"
 microservicesFolderPath="$baseFolderPath/Microservices"
-tenantId=""
-subscriptionId=""
-aksResourceGroup=""
-masterResourceGroup=""
-location=""
-clusterName=""
-version=""
-acrName=""
+tenantId="72f988bf-86f1-41af-91ab-2d7cd011db47"
+subscriptionId="6bdcc705-8db6-4029-953a-e749070e6db6"
+aksResourceGroup="aks-train-rg"
+masterResourceGroup="master-workshop-rg"
+location="eastus"
+clusterName="aks-train-cluster"
+version="1.20.7"
+acrName="akstrnacr"
 acrId=
-keyVaultName=""
+keyVaultName="aks-train-kv"
 keyvaultId=
-objectId=
-masterVnetName=""
-masterVnetPrefix=""
+masterVnetName="master-workshop-vnet"
+masterVnetPrefix="11.0.0.0/16"
 masterVnetId=
-masterSubnetName=""
-masterSubnetPrefix=""
+masterSubnetName="master-js-ubuntuvm-subnet"
+masterSubnetPrefix="11.0.1.32/27"
 masterSubnetId=
-aksVnetName=""
-aksVnetPrefix=""
+aksVnetName="aks-train-vnet"
+aksVnetPrefix="18.0.0.0/21"
 aksVnetId=
-aksSubnetName=""
-aksSubnetPrefix=""
+aksSubnetName="aks-train-subnet"
+aksSubnetPrefix="18.0.0.0/24"
 aksSubnetId=
-aksIngressSubnetName=""
-aksIngressSubnetPrefix=""
+aksIngressSubnetName="aks-train-ingress-subnet"
+aksIngressSubnetPrefix="18.0.1.0/24"
 aksIngressSubnetId=
-appgwName=""
-appgwSubnetName=""
-appgwSubnetPrefix=""
+aksServicePrefix="18.0.2.0/24"
+dnsServiceIP="18.0.2.10"
+appgwName="aks-train-appgw"
+appgwSubnetName="aks-train-appgw-subnet"
+appgwSubnetPrefix="18.0.3.0/27"
 appgwSubnetId=
 apimName=""
 apimSubnetName=""
@@ -49,28 +50,27 @@ apiPoolName=aksapipool
 apiPoolNodeSize="Standard_DS3_v2"
 apiPoolNodeCount=3
 apiPoolMaxPods=30
-apiPoolMaxNodeCount=10
+apiPoolMaxNodeCount=5
 networkPlugin=azure
 networkPolicy=azure
 vmSetType=VirtualMachineScaleSets
 addons=monitoring
-aadAdminGroupID=""
-aadTenantID=""
-spAppId=""
-spPassword=""
 masterAKSPeering="$masterVnetName-$aksVnetName-peering"
 aksMasterPeering="$aksVnetName-$masterVnetName-peering"
 masterAKSPrivateDNSLink="$masterVnetName-aks-dns-link"
 aksPrivateDNSLink="$aksVnetName-dns-link"
-aksIngControllerName=""
-aksIngControllerNSName=""
+aksIngControllerName="aks-train-ing"
+aksIngControllerNSName="$aksIngControllerName-ns"
 aksIngControllerFileName="internal-ingress"
-privateDNSZoneName=""
+privateDNSZoneName="internal.wkshpdev.com"
 privateDNSZoneId=
 httpsListenerNames='("dev","qa")'
 backendIpAddress=
-aadAdminGroupIDs='("")'
-aadTenantID=""
+aadAdminGroupIDs='("6ec3a0a8-a6c6-4cdf-a6e3-c296407a5ec1")'
+aadTenantID="3851f269-b22b-4de6-97d6-aa9fe60fe301"
+objectId="890c52c5-d318-4185-a548-e07827190ff6"
+spAppId=""
+spPassword=""
 
 #Login to Azure
 az login --tenant $tenantId
@@ -88,19 +88,28 @@ Pre-Config - Day 0
 #Create Service Principal
 az ad sp create-for-rbac --skip-assignment -n https://aks-train-sp
 {
-  "appId": "",
+  "appId": "be96b485-082f-406b-8271-06dcb442f6f2",
   "displayName": "https://aks-train-sp",
-  "name": "",
-  "password": "",
-  "tenant": ""
+  "name": "be96b485-082f-406b-8271-06dcb442f6f2",
+  "password": "ClHV~lb5n0MN.4WSiHNBiTnh2Ie5.mHR6_",
+  "tenant": "72f988bf-86f1-41af-91ab-2d7cd011db47"
 }
 
 #Set Service Principal variables
-spAppId=""
-spPassword=""
+spAppId="be96b485-082f-406b-8271-06dcb442f6f2"
+spPassword="ClHV~lb5n0MN.4WSiHNBiTnh2Ie5.mHR6_"
+
+#Create Master Resource Group for Hub workloads
+az group create -n $masterResourceGroup -l $location
+
+#View Resource Group for Hub workloads
+az group show -g $masterResourceGroup
 
 #Create Resource Group for AKS workloads
 az group create -n $aksResourceGroup -l $location
+
+#View Resource Group for AKS workloads
+az group show -g $aksResourceGroup 
 
 [Diagram - CNI]
 
@@ -170,6 +179,7 @@ az aks create --name $clusterName \
 --resource-group $aksResourceGroup \
 --kubernetes-version $version --location $location \
 --vnet-subnet-id "$aksSubnetId" --enable-addons $addons \
+--service-cidr $aksServicePrefix --dns-service-ip $dnsServiceIP \
 --node-vm-size $sysPoolNodeSize \
 --node-count $sysPoolNodeCount --max-pods $sysPoolMaxPods \
 --service-principal $spAppId \
