@@ -59,70 +59,73 @@
   microservicesFolderPath="$baseFolderPath/Microservices"
   tenantId=""
   subscriptionId=""
-  aksResourceGroup=""
-  masterResourceGroup=""
-  location=""
-  clusterName=""
-  version=""
-  acrName=""
+  aksResourceGroup="aks-train-rg"
+  masterResourceGroup="master-workshop-rg"
+  location="eastus"
+  clusterName="aks-train-cluster"
+  version="1.20.7"
+  acrName="akstrnacr"
   acrId=
-  keyVaultName=""
+  keyVaultName="aks-train-kv"
   keyvaultId=
-  objectId=
-  masterVnetName=""
-  masterVnetPrefix=""
+  masterVnetName="master-workshop-vnet"
+  masterVnetPrefix="11.0.0.0/16"
   masterVnetId=
-  masterSubnetName=""
-  masterSubnetPrefix=""
+  masterSubnetName="master-js-ubuntuvm-subnet"
+  masterSubnetPrefix="11.0.1.32/27"
   masterSubnetId=
-  aksVnetName=""
-  aksVnetPrefix=""
+  aksVnetName="aks-train-vnet"
+  aksVnetPrefix="18.0.0.0/21"
   aksVnetId=
-  aksSubnetName=""
-  aksSubnetPrefix=""
+  aksSubnetName="aks-train-subnet"
+  aksSubnetPrefix="18.0.0.0/24"
   aksSubnetId=
-  aksIngressSubnetName=""
-  aksIngressSubnetPrefix=""
+  aksIngressSubnetName="aks-train-ingress-subnet"
+  aksIngressSubnetPrefix="18.0.1.0/24"
   aksIngressSubnetId=
-  appgwName=""
-  appgwSubnetName=""
-  appgwSubnetPrefix=""
+  aksServicePrefix="18.0.2.0/24"
+  dnsServiceIP="18.0.2.10"
+  appgwName="aks-train-appgw"
+  appgwSubnetName="aks-train-appgw-subnet"
+  appgwSubnetPrefix="18.0.3.0/27"
   appgwSubnetId=
   apimName=""
   apimSubnetName=""
   apimSubnetPrefix=""
   apimSubnetId=
   sysPoolName=akssyspool
-  sysPoolNodeSize="Standard_DS3_v2"
+  sysPoolNodeSize="Standard_DS2_v2"
   sysPoolNodeCount=3
   sysPoolMaxPods=30
   sysPoolMaxNodeCount=5
   apiPoolName=aksapipool
-  apiPoolNodeSize="Standard_DS3_v2"
+  apiPoolNodeSize="Standard_DS2_v2"
   apiPoolNodeCount=3
   apiPoolMaxPods=30
-  apiPoolMaxNodeCount=10
+  apiPoolMaxNodeCount=5
   networkPlugin=azure
   networkPolicy=azure
   vmSetType=VirtualMachineScaleSets
+  osType=Linux
   addons=monitoring
-  aadAdminGroupID=""
-  aadTenantID=""
-  spAppId=""
-  spPassword=""
   masterAKSPeering="$masterVnetName-$aksVnetName-peering"
   aksMasterPeering="$aksVnetName-$masterVnetName-peering"
-  masterAKSPrivateDNSLink="$masterVnetName-aks-dns-link"
-  aksPrivateDNSLink="$aksVnetName-dns-link"
-  aksIngControllerName=""
-  aksIngControllerNSName=""
+  masterPrivateDNSLink="$masterVnetName-dns-plink"
+  aksPrivateDNSLink="$aksVnetName-dns-plink"
+  aksIngControllerName="aks-train-ing"
+  aksIngControllerNSName="$aksIngControllerName-ns"
   aksIngControllerFileName="internal-ingress"
+  aksIngControllerFilePath="$baseFolderPath/Setup/Common/internal-ingress.yaml"
   privateDNSZoneName=""
   privateDNSZoneId=
-  httpsListenerNames='("dev","qa")'
   backendIpAddress=
-  aadAdminGroupIDs='("")'
+  aadAdminGroupIDs=""
   aadTenantID=""
+  objectId=""
+  spAppId=""
+  spPassword=""
+  logWorkspaceName="aks-train-lw"
+  lwResourceGroup="monitoring-workshop-rg"
   ```
 
 - **Login to Azure**
@@ -175,6 +178,21 @@
     
 
 - **KEDA**
+
+  ![keda-arch](./Assets/keda-arch.png)
+
+  
+
+  - Event Driven Autoscaler
+  - Scaling of any container in Kubernetes based on the number of events needing to be processed
+  - Single-purpose and lightweight component 
+  - Can be added into any Kubernetes cluster
+  - Works alongside standard Kubernetes components like the [Horizontal Pod Autoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
+  - Can extend functionality without overwriting or duplication
+  - **How It Works**
+    - Refer [Here](https://keda.sh/docs/2.1/concepts/)
+    - **Agent** — Activates and Deactivates Kubernetes Deployments to scale to and from zero on no events. This is one of the primary roles of the `keda-operator` container that runs when you install KEDA.
+    - **Metrics** — KEDA acts as a [Kubernetes metrics server](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-custom-metrics) that exposes rich event data like queue length or stream lag to the Horizontal Pod Autoscaler to drive scale out. It is up to the Deployment to consume the events directly from the source. This preserves rich event integration and enables gestures like completing or abandoning queue messages to work out of the box. The metric serving is the primary role of the `keda-operator-metrics-apiserver` container that runs when you install KEDA.
 
   ```bash
   #Kubernetes based Event Driven AutoScaling - Severless, Event Driven Apps
@@ -273,13 +291,10 @@
 
   - What it is?
 
-    [TBD]
+    ![istio-arch](./Assets/istio-arch.png)
 
-  - Why?
+  - **Features**
 
-    [TBD]
-
-  - Features
     - Observability
     - Distributed Tracing
     - Traffic Splitting
