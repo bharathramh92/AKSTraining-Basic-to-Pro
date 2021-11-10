@@ -1,0 +1,37 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ (index .Values.netpols 0).name }}
+  namespace: {{ (index .Values.netpols 0).namespace }}
+spec:
+  podSelector:
+    matchLabels:
+    {{ toYaml (index .Values.netpols 0).podLabels | nindent 6 }}
+  policyTypes:
+  {{ toYaml (index .Values.netpols 0).policyTypes | nindent 2 }}
+  ingress:
+  {{ $ingresses := (index .Values.netpols 0).ingresses }}
+  {{ $ingress := (index $ingresses 0) }}
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: {{ (index $ingress.namespaceLabels 0) }}
+    - podSelector:
+        matchLabels:
+          app: {{ (index $ingress.podLabels 0) }}
+    - podSelector:
+        matchLabels:
+          app: {{ (index $ingress.podLabels 1) }}
+    ports:
+    - protocol: TCP
+      port: {{ (index $ingress.ports 0) }}
+  {{ $ingress := (index $ingresses 1) }}
+  - from:
+    - ipBlock:
+        cidr: {{ (index $ingress.ipBlocks 0) }}
+    - namespaceSelector:
+        matchLabels:
+          name: {{ (index $ingress.namespaceLabels 0) }}
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ (index $ingress.podLabels 0) }}

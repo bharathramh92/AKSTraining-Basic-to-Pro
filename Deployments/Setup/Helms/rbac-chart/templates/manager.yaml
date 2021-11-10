@@ -1,0 +1,28 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Values.manager.roleName }}
+  namespace: {{ .Values.manager.roleNamespace }}
+rules:
+{{- range $rule := .Values.developer.rules}}
+- apiGroups: {{ $rule.apiGroups }}
+  resources: {{ $rule.resources }}
+  verbs: {{ $rule.verbs }}
+{{- end }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Values.manager.bindingName }}
+  namespace: {{ .Values.manager.bindingNamespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ .Values.manager.roleName }}
+subjects:
+{{- range $subject := .Values.manager.subjects}}
+- apiGroup: rbac.authorization.k8s.io
+  name: {{ $subject.name }}
+  kind: {{ $subject.kind }}
+{{- end }}

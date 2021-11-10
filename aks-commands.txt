@@ -54,19 +54,20 @@ apiPoolMaxNodeCount=5
 networkPlugin=azure
 networkPolicy=azure
 vmSetType=VirtualMachineScaleSets
+osType=Linux
 addons=monitoring
 masterAKSPeering="$masterVnetName-$aksVnetName-peering"
 aksMasterPeering="$aksVnetName-$masterVnetName-peering"
-masterAKSPrivateDNSLink="$masterVnetName-aks-dns-link"
-aksPrivateDNSLink="$aksVnetName-dns-link"
+masterPrivateDNSLink="$masterVnetName-dns-plink"
+aksPrivateDNSLink="$aksVnetName-dns-plink"
 aksIngControllerName="aks-train-ing"
 aksIngControllerNSName="$aksIngControllerName-ns"
 aksIngControllerFileName="internal-ingress"
+aksIngControllerFilePath="$baseFolderPath/Setup/Common/internal-ingress.yaml"
 privateDNSZoneName="internal.wkshpdev.com"
 privateDNSZoneId=
-httpsListenerNames='("dev","qa")'
 backendIpAddress=
-aadAdminGroupIDs='("6ec3a0a8-a6c6-4cdf-a6e3-c296407a5ec1")'
+aadAdminGroupIDs="6ec3a0a8-a6c6-4cdf-a6e3-c296407a5ec1"
 aadTenantID="3851f269-b22b-4de6-97d6-aa9fe60fe301"
 objectId="890c52c5-d318-4185-a548-e07827190ff6"
 spAppId=""
@@ -133,15 +134,58 @@ az network vnet subnet create -n $aksSubnetName --vnet-name $aksVnetName -g $aks
 aksSubnetId=$(az network vnet subnet show -n $aksSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
 echo $aksSubnetId
 
+az network nsg create -g $aksResourceGroup -n $aksVnetName-$aksSubnetName-$location
+
+az network nsg rule create -n AllowCorpNet --nsg-name $aksVnetName-$aksSubnetName-$location -g $aksResourceGroup \
+--access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "*" \
+--destination-address-prefixes "*" --destination-port-ranges "*" --priority 2700
+
+az network nsg rule create -n AllowSAW --nsg-name $aksVnetName-$aksSubnetName-$location -g $aksResourceGroup \
+--access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "*" \
+--destination-address-prefixes "*" --destination-port-ranges "*" --priority 2701
+
+az network vnet subnet update --name $aksSubnetName --vnet-name $aksVnetName -g $aksResourceGroup \
+--network-security-group $aksVnetName-$aksSubnetName-$location
+
 #Deploy Ingress Subnet inside Spoke Virtual Network
 az network vnet subnet create -n $aksIngressSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $aksIngressSubnetPrefix
 aksIngressSubnetId=$(az network vnet subnet show -n $aksIngressSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
 echo $aksIngressSubnetId
 
+az network nsg create -g $aksResourceGroup -n $aksVnetName-$aksIngressSubnetName-$location
+
+az network nsg rule create -n AllowCorpNet --nsg-name $aksVnetName-$aksIngressSubnetName-$location -g $aksResourceGroup \
+--access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "*" \
+--destination-address-prefixes "*" --destination-port-ranges "*" --priority 2700
+
+az network nsg rule create -n AllowSAW --nsg-name $aksVnetName-$aksIngressSubnetName-$location -g $aksResourceGroup \
+--access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "*" \
+--destination-address-prefixes "*" --destination-port-ranges "*" --priority 2701
+
+az network vnet subnet update --name $aksIngressSubnetName --vnet-name $aksVnetName -g $aksResourceGroup \
+--network-security-group $aksVnetName-$aksIngressSubnetName-$location
+
 #Deploy Application Gateway Subnet inside Spoke Virtual Network
 az network vnet subnet create -n $appgwSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $appgwSubnetPrefix
 appgwSubnetId=$(az network vnet subnet show -n $appgwSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
 echo $appgwSubnetId
+
+az network nsg create -g $aksResourceGroup -n $aksVnetName-$appgwSubnetName-$location
+
+az network nsg rule create -n AllowCorpNet --nsg-name $aksVnetName-$appgwSubnetName-$location -g $aksResourceGroup \
+--access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "*" \
+--destination-address-prefixes "*" --destination-port-ranges "*" --priority 2700
+
+az network nsg rule create -n AllowSAW --nsg-name $aksVnetName-$appgwSubnetName-$location -g $aksResourceGroup \
+--access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "*" \
+--destination-address-prefixes "*" --destination-port-ranges "*" --priority 2701
+
+az network nsg rule create -n GatewayManger --nsg-name $aksVnetName-$appgwSubnetName-$location -g $aksResourceGroup \
+--access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "65200-65535" \
+--destination-address-prefixes "*" --destination-port-ranges "*" --priority 2702
+
+az network vnet subnet update --name $appgwSubnetName --vnet-name $aksVnetName -g $aksResourceGroup \
+--network-security-group $aksVnetName-$appgwSubnetName-$location
 
 #Deploy API Management Subnet inside Spoke Virtual Network
 az network vnet subnet create -n $apimSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $apimSubnetPrefix
@@ -162,12 +206,14 @@ az role assignment create --assignee $spAppId --role "AcrPull" --scope $acrId
 #Deploy KeyVault
 az keyvault create -n $keyVaultName -g $aksResourceGroup --sku Standard
 objectId=$(az ad user show --id modatta@microsoft.com --query="objectId" -o tsv)
+echo $objectId
 
 #Set Access Policy to KeyVault for the loged in User 
 az keyvault set-policy -n $keyVaultName -g $aksResourceGroup --key-permissions get list update create delete \
 --secret-permissions get list set delete --certificate-permissions get list update create delete \
 --object-id $objectId
 keyvaultId=$(az keyvault show -n $keyVaultName -g $aksResourceGroup --query="id" -o tsv)
+echo $keyvaultId
 
 ================================================================================
 
@@ -188,16 +234,14 @@ az aks create --name $clusterName \
 --nodepool-name $sysPoolName --vm-set-type $vmSetType \
 --generate-ssh-keys \
 --enable-aad \
---aad-admin-group-object-ids $aadAdminGroupID \
+--aad-admin-group-object-ids $aadAdminGroupIDs \
 --aad-tenant-id $aadTenantID \
 --attach-acr $acrName
 
 #Connect to AKS cluster and check status
 az aks get-credentials -g $aksResourceGroup --name $clusterName --admin --overwrite
+kubectl get no
 kubectl get ns
-
-#Connect to AKS cluster as Admin
-az aks get-credentials -g $resourceGroup -n $clusterName --admin
 
 #Update System nodepool with AutoScaling
 az aks nodepool update --cluster-name $clusterName --resource-group $aksResourceGroup \
@@ -225,36 +269,41 @@ Post-Config - Day 2
 [Diagram - aks+appgw]
 
 #Choose a Static Private IP from $aksIngressSubnetName
-backendIpAddress=""
+backendIpAddress="18.0.1.100"
+
+[Diagram - DNS - TBD]
 
 #A Private DNS Zone is needed to resolve all Private IP addresses
 #Prepare Azure Private DNS Zone
 
 #Create Azure Private DNS Zone
-privateDNSZoneId=$(az network private-dns zone show -g $masterResourceGroup -n $privateDNSZoneName --query="id" -o tsv)
 az network private-dns zone create -n $privateDNSZoneName -g $masterResourceGroup
+privateDNSZoneId=$(az network private-dns zone show -g $masterResourceGroup -n $privateDNSZoneName --query="id" -o tsv)
+echo $privateDNSZoneId
 
 #Add RecordSet for dev
-az network private-dns record-set a create -n dev -g $masterResourceGroup --zone-name $privateDNSZoneName
-az network private-dns record-set a add-record -a $backendIpAddress -n dev -g $masterResourceGroup -z $privateDNSZoneName
+az network private-dns record-set a create -n aks-train-dev -g $masterResourceGroup --zone-name $privateDNSZoneName
+az network private-dns record-set a add-record -a $backendIpAddress -n aks-train-dev -g $masterResourceGroup -z $privateDNSZoneName
 
 #Add RecordSet for qa
-az network private-dns record-set a create -n qa -g $masterResourceGroup --zone-name $privateDNSZoneName
-az network private-dns record-set a add-record -a $backendIpAddress -n qa -g $masterResourceGroup -z $privateDNSZoneName
+az network private-dns record-set a create -n aks-train-qa -g $masterResourceGroup --zone-name $privateDNSZoneName
+az network private-dns record-set a add-record -a $backendIpAddress -n aks-train-qa -g $masterResourceGroup -z $privateDNSZoneName
 
-#Add RecordSet for dmoke
-az network private-dns record-set a create -n smoke -g $masterResourceGroup --zone-name $privateDNSZoneName
-az network private-dns record-set a add-record -a $backendIpAddress -n smoke -g $masterResourceGroup -z $privateDNSZoneName
+#Add RecordSet for smoke
+az network private-dns record-set a create -n aks-train-smoke -g $masterResourceGroup --zone-name $privateDNSZoneName
+az network private-dns record-set a add-record -a $backendIpAddress -n aks-train-smoke -g $masterResourceGroup -z $privateDNSZoneName
 
 #Link master Virtual Network to Private DNS Zone
-az network private-dns link vnet create -g $masterResourceGroup -n $masterAKSPrivateDNSLink -z $privateDNSZoneName -v $masterVnetId -e false
+az network private-dns link vnet create -g $masterResourceGroup -n $masterPrivateDNSLink -z $privateDNSZoneName -v $masterVnetId -e false
+az network private-dns link vnet show -g $masterResourceGroup -n $masterPrivateDNSLink -z $privateDNSZoneName
 
 #Link AKS Virtual Network to Private DNS Zone
-az network private-dns link vnet create -g $aksResourceGroup -n $aksPrivateDNSLink -z $privateDNSZoneName -v $aksVnetId -e false
+az network private-dns link vnet create -g $masterResourceGroup -n $aksPrivateDNSLink -z $privateDNSZoneName -v $aksVnetId -e false
+az network private-dns link vnet show -g $masterResourceGroup -n $aksPrivateDNSLink -z $privateDNSZoneName
 
 #Create Ingress Namespace
 kubectl create namespace $aksIngControllerNSName
-kubectl label namespace $aksIngControllerNSName name=$aksIngControllerNSName
+#kubectl label namespace $aksIngControllerNSName name=$aksIngControllerNSName
 
 #Install nginx as ILB using Helm
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -276,10 +325,17 @@ helm install $aksIngControllerName ingress-nginx/ingress-nginx --namespace $aksI
 #Specify the Subnet from Ingress controller should pick IP addresses (Good practice)
 --set controller.service.annotations.'service\.beta\.kubernetes\.io/azure-load-balancer-internal-subnet'=$aksIngressSubnetName
 
+helm install $aksIngControllerName ingress-nginx/ingress-nginx --namespace $aksIngControllerNSName \
+-f $aksIngControllerFilePath \
+--set controller.service.loadBalancerIP=$backendIpAddress \
+--set controller.nodeSelector.agentpool=$sysPoolName \
+--set controller.defaultBackend.nodeSelector.agentpool=$sysPoolName \
+--set controller.service.annotations.'service\.beta\.kubernetes\.io/azure-load-balancer-internal-subnet'=$aksIngressSubnetName
+
 #Create Namespaces
-kubectl create ns aks-workshop-dev // DEV workloads
-kubectl create ns aks-workshop-qa // QA workloads
-kubectl create ns smoke // Smoke Test
+kubectl create ns aks-train-dev // DEV workloads
+kubectl create ns aks-train-qa // QA workloads
+kubectl create ns aks-train-smoke // Smoke Test
 
 /*
 #Deploy Application Gateway
@@ -299,33 +355,51 @@ Application Gateway
 <Steps from endtoendSSL.md>
 #backend pool of app gateway points to Private IP of Nginx Ingress Controller
 
+RBAC
+================================================================================
+#Deploy RBAC for the AKS cluster
+helm create rbac-chart
+
+helm install rbac-chart -n aks-train-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
+#helm upgrade rbac-chart -n aks-train-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
+
+helm install rbac-chart -n aks-train-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
+#helm upgrade rbac-chart -n aks-train-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
+
+#helm uninstall rbac-chart
+
+#Check access by multiple login ids
+
+================================================================================
+
 Ingress - Smoke
-=====================
+================================================================================
 #Deploy Ingress Rule object for Smoke namespace
-helm create smoke-ingress-chart
+helm create ingress-chart
 
-helm install  smoke-ingress-chart -n smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
+helm install ingress-chart -n aks-train-smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
 
-#helm upgrade  smoke-ingress-chart -n smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
-#helm uninstall smoke-ingress-chart -n smoke
+#helm upgrade  ingress-chart -n aks-train-smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
+#helm uninstall ingress-chart -n aks-train-smoke
+
+================================================================================
 
 TEST - Smoke
-=====================
+================================================================================
 #Test Cluster Health and end-to-end connectivity
 #Deploy Nginx app in Smoke Namespace
 
-az acr import -n $acrName --source docker.io/library/nginx:alpine -t nginx:alpine (Public)
-az acr import -n $acrName --source docker.io/library/nginx:alpine -t nginx:alpine (Private)
+az acr import -n $acrName --source docker.io/library/nginx:alpine -t nginx:alpine
 
 helm create smoke-tests-chart
 
-helm install smoke-tests-chart -n smoke $setupFolderPath/Helms/smoke-tests-chart/ -f $setupFolderPath/Helms/smoke-tests-chart/values-smoke.yaml
+helm install smoke-tests-chart -n aks-train-smoke $setupFolderPath/Helms/smoke-tests-chart/ -f $setupFolderPath/Helms/smoke-tests-chart/values-smoke.yaml
 
-#helm upgrade smoke-tests-chart -n smoke $setupFolderPath/Helms/smoke-tests-chart/ -f $setupFolderPath/Helms/smoke-tests-chart/values-smoke.yaml
-#helm uninstall smoke-tests-chart -n smoke
+#helm upgrade smoke-tests-chart -n aks-train-smoke $setupFolderPath/Helms/smoke-tests-chart/ -f $setupFolderPath/Helms/smoke-tests-chart/values-smoke.yaml
+#helm uninstall smoke-tests-chart -n aks-train-smoke
 
 #Call Nginx app Url; check end-to-end connectivity
-curl -k https://smoke-<appgw-dns-name>/nginx
+curl -k https://smoke-<appgw-dns-name>/healthz
 
 ================================================================================
 
@@ -357,15 +431,15 @@ https://github.com/monojit18/mslearn-aks-workshop-ratings-api.git
 #This docker build but performed in a Cloud Agent(VM) by ACR
 az acr build -t $acrName.azurecr.io/ratings-api:v1.0.0 -r $acrName .
 
-kubectl create secret generic aks-workshop-mongo-secret -n aks-workshop-dev --context=$CTX_CLUSTER1 \
+kubectl create secret generic aks-workshop-mongo-secret -n aks-train-dev --context=$CTX_CLUSTER1 \
 --from-literal=MONGOCONNECTION="mongodb://ratingsuser:ratingspwd@ratingsdb-mongodb.db:27017/ratingsdb"
 
 #Change <acrName> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
 #Change <agentpool> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
-helm install ratingsapi-chart -n aks-workshop-dev $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+helm install ratingsapi-chart -n aks-train-dev $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
 
-#helm upgrade ratingsapi-chart -n aks-workshop-dev $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
-#helm uninstall ratingsapi-chart -n aks-workshop-dev
+#helm upgrade ratingsapi-chart -n aks-train-dev $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+#helm uninstall ratingsapi-chart -n aks-train-dev
 
 #RatingsWeb - Ratings App Frontend
 #Clone/Fork/Download Souerce code
@@ -377,20 +451,20 @@ az acr build -t $acrName.azurecr.io/ratings-web:v1.0.0 -r $acrName .
 
 #Change <acrName> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
 #Change <agentpool> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
-helm install ratingsweb-chart -n aks-workshop-dev $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-dev.yaml
+helm install ratingsweb-chart -n aks-train-dev $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-dev.yaml
 
-#helm upgrade ratingsweb-chart -n aks-workshop-dev $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-dev.yaml
-#helm uninstall ratingsweb-chart -n aks-workshop-dev
+#helm upgrade ratingsweb-chart -n aks-train-dev $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-dev.yaml
+#helm uninstall ratingsweb-chart -n aks-train-dev
 
 Ingress - DEV
 =====================
 #Deploy Ingress Rule object for DEV namespace
 helm create ingress-chart
 
-helm install  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+helm install  ingress-chart -n aks-train-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
 
-#helm upgrade  ingress-chart -n aks-workshop-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
-#helm uninstall ingress-chart -n aks-workshop-dev
+#helm upgrade  ingress-chart -n aks-train-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+#helm uninstall ingress-chart -n aks-train-dev
 
 #Call Ratings app Url; check end-to-end connectivity
 curl -k https://dev-<appgw-dns-name>/
@@ -401,32 +475,32 @@ Ratings App - QA
 =====================
 #Deploy more apps - Ratings app
 
-kubectl create secret generic aks-workshop-mongo-secret -n aks-workshop-qa --context=$CTX_CLUSTER1 \
+kubectl create secret generic aks-workshop-mongo-secret -n aks-train-qa --context=$CTX_CLUSTER1 \
 --from-literal=MONGOCONNECTION="mongodb://ratingsuser:ratingspwd@ratingsdb-mongodb.db:27017/ratingsdb"
 
 #Change <acrName> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
 #Change <agentpool> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
-helm install ratingsapi-chart -n aks-workshop-qa $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+helm install ratingsapi-chart -n aks-train-qa $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
 
-#helm upgrade ratingsapi-chart -n aks-workshop-qa $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
-#helm uninstall ratingsapi-chart -n aks-workshop-qa
+#helm upgrade ratingsapi-chart -n aks-train-qa $microservicesFolderPath/Helms/ratingsapi-chart/ -f $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
+#helm uninstall ratingsapi-chart -n aks-train-qa
 
 #RatingsWeb - Ratings App Frontend
 #Change <acrName> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
 #Change <agentpool> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-qa.yaml
-helm install ratingsweb-chart -n aks-workshop-qa $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-qa.yaml
+helm install ratingsweb-chart -n aks-train-qa $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-qa.yaml
 
-#helm upgrade ratingsweb-chart -n aks-workshop-qa $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-qa.yaml
-#helm uninstall ratingsweb-chart -n aks-workshop-qa
+#helm upgrade ratingsweb-chart -n aks-train-qa $microservicesFolderPath/Helms/ratingsweb-chart/ -f $microservicesFolderPath/Helms/ratingsweb-chart/values-qa.yaml
+#helm uninstall ratingsweb-chart -n aks-train-qa
 
 Ingress - QA
 =====================
 #Deploy Ingress Rule object for QA namespace
 
-helm install  ingress-chart -n aks-workshop-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
+helm install  ingress-chart -n aks-train-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
 
-#helm upgrade  ingress-chart -n aks-workshop-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
-#helm uninstall ingress-chart -n aks-workshop-qa
+#helm upgrade  ingress-chart -n aks-train-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
+#helm uninstall ingress-chart -n aks-train-qa
 
 #Call Ratings app Url; check end-to-end connectivity
 curl -k https://qa-<appgw-dns-name>/
@@ -438,24 +512,24 @@ Network Policies - DEV
 [Diagram - Network Policy]
 
 #East-West Traffic Security
-helm install netpol-chart -n aks-workshop-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
+helm install netpol-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
 
-#helm upgrade netpol-chart -n aks-workshop-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
-#helm uninstall netpol-chart -n aks-workshop-dev
+#helm upgrade netpol-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
+#helm uninstall netpol-chart -n aks-train-dev
 
 Network Policies - QA
 =========================
-helm install netpol-chart -n aks-workshop-qa $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-qa.yaml
+helm install netpol-chart -n aks-train-qa $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-qa.yaml
 
-#helm upgrade netpol-chart -n aks-workshop-qa $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-qa.yaml
-#helm uninstall netpol-chart -n aks-workshop-qa
+#helm upgrade netpol-chart -n aks-train-qa $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-qa.yaml
+#helm uninstall netpol-chart -n aks-train-qa
 
 Network Policies - Smoke
 =========================
-helm install netpol-chart -n smoke $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-smoke.yaml
+helm install netpol-chart -n aks-train-smoke $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-smoke.yaml
 
-#helm upgrade netpol-chart -n smoke $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-smoke.yaml
-#helm uninstall netpol-chart -n smoke
+#helm upgrade netpol-chart -n aks-train-smoke $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-smoke.yaml
+#helm uninstall netpol-chart -n aks-train-smoke
 
 #Call Ratings app Url; check end-to-end connectivity
 curl -k https://dev-<appgw-dns-name>/
@@ -465,18 +539,18 @@ curl -k https://smoke-<appgw-dns-name>/nginx
 podName=$(kubectl get pod -l app=nginx-pod -n primary -o jsonpath='{.items[0].metadata.name}')
 
 #Should succeed
-kubectl exec -it $podName -n smoke -- curl -k http://ratingsapp-web.aks-workshop-dev.svc/
+kubectl exec -it $podName -n aks-train-smoke -- curl -k http://ratingsapp-web.aks-train-dev.svc/
 
 #Should succeed
-kubectl exec -it $podName -n smoke -- curl -k http://ratingsapp-web.aks-workshop-qa.svc/
+kubectl exec -it $podName -n aks-train-smoke -- curl -k http://ratingsapp-web.aks-train-qa.svc/
 
 podName=$(kubectl get pod -l app=ratingsweb-pod -n primary -o jsonpath='{.items[0].metadata.name}')
 
 #Should FAIL
-kubectl exec -it $podName -n aks-workshop-dev -- curl -k http://ratingsapp-web.aks-workshop-qa.svc/
+kubectl exec -it $podName -n aks-train-dev -- curl -k http://ratingsapp-web.aks-train-qa.svc/
 
 #Should FAIL
-kubectl exec -it $podName -n aks-workshop-dev -- curl -k http://nginx-svc.smoke.svc/
+kubectl exec -it $podName -n aks-train-dev -- curl -k http://nginx-svc.aks-train-smoke.svc/
 
 ================================================================================
 Cluster Health
@@ -506,6 +580,14 @@ https://aka.ms/container-azm-ms-agentconfig
 #AKS Monitoring with Grafana
 https://github.com/grafana/helm-charts/blob/main/charts/grafana/README.md
 
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+
+kubectl create ns grafana-monitor
+helm install aks-train-grafana -n grafana-monitor grafana/grafana --set nodeSelector.agentpool=$sysPoolName
+#helm uninstall aks-train-grafana -n grafana-monitor
+
+
 #Integrate Grafan with Azure Monitor
 https://grafana.com/grafana/plugins/grafana-azure-monitor-datasource/
 
@@ -520,24 +602,6 @@ https://techcommunity.microsoft.com/t5/azure-global/scalable-apache-jmeter-test-
 #Open JMeter
 
 ================================================================================
-
-RBAC
-================================================================================
-#Deploy RBAC for the AKS cluster
-helm create rbac-chart
-
-helm install rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
-
-#helm upgrade rbac-chart -n aks-workshop-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
-helm install rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
-
-#helm upgrade rbac-chart -n aks-workshop-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
-#helm uninstall rbac-chart
-
-#Check access by multiple login ids
-
-================================================================================
-
 
 Cluster Upgrade
 ================================================================================
@@ -568,7 +632,7 @@ Larger values can be set but the maximum number of nodes used for max surge won'
 
 - At the end of the process, the last buffer node will be deleted, maintaining the existing agent node count and zone balance
 
-$upgradeVersion=""
+upgradeVersion=""
 
 az aks get-upgrades --resource-group $aksResourceGroup --name $clusterName --output table
 az aks upgrade --resource-group $aksResourceGroup --name $clusterName --kubernetes-version $upgradeVersion
@@ -626,9 +690,9 @@ Gone thru the exercises of Basic to Advanced
 AKS cluster already created
 
 3 Namespaces created
-- aks-workshop-dev
-- aks-workshop-qa
-- smoke
+- aks-train-dev
+- aks-train-qa
+- aks-train-smoke
 
 Applications Deployed
 - Ratings App (DEV and QA)
@@ -717,7 +781,7 @@ spAppId=""
 spPassword=""
 masterAKSPeering="$masterVnetName-$aksVnetName-peering"
 aksMasterPeering="$aksVnetName-$masterVnetName-peering"
-masterAKSPrivateDNSLink="$masterVnetName-aks-dns-link"
+masterPrivateDNSLink="$masterVnetName-aks-dns-link"
 aksPrivateDNSLink="$aksVnetName-dns-link"
 aksIngControllerName=""
 aksIngControllerNSName=""

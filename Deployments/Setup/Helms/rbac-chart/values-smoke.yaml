@@ -1,0 +1,35 @@
+clusteradmin:
+  name: aks-workshop-cluster-admin-bindings
+  roleName: cluster-admin
+  subjects:
+  - name: 890c52c5-d318-4185-a548-e07827190ff6
+    kind: User
+
+developer:
+  roleName: smoke-developer-roles
+  roleNamespace: aks-train-smoke
+  rules:
+  - apiGroups: ["", "apps", "networking.k8s.io"]
+    resources: ["configmaps", "pods", "pods/exec", "pods/log", "deployments", "services", "events", "ingresses"]
+    verbs: ["create", "delete", "deletecollection", "get", "list", "patch", "update", "watch"]
+  bindingName: smoke-developer-rb
+  bindingNamespace: aks-train-smoke
+  subjects:
+  - name: 1d17d21a-86c1-48be-b09d-7398c13a85c0
+    kind: Group
+
+manager:
+  roleName: smoke-manager-roles
+  roleNamespace: aks-train-smoke
+  rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["nodes", "pods"]
+    verbs: ["get", "list"]
+  bindingName: smoke-manager-rb
+  bindingNamespace: aks-train-smoke
+  subjects:
+  - name: 09ab8656-df95-463c-af83-d1ce8d54830f
+    kind: Group

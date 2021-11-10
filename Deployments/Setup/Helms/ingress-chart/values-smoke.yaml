@@ -1,0 +1,14 @@
+ingress:
+  name: smoke-ingress
+  namespace: aks-train-smoke
+  annotations:
+   ingressClass: nginx
+   enableCors: "true"
+   rewriteTarget: /$1
+  hosts:
+  - name: aks-train-smoke.internal.wkshpdev.com
+    paths:  
+    - path: /healthz/?(.*)
+      pathType: Prefix
+      service: nginx-svc
+      port: 80    

@@ -1,0 +1,28 @@
+netpols:
+- name: tblz-bkend-netpol
+  namespace: tablez-dev
+  podLabels:
+    app: tblz-bkend-pod
+  policyTypes:
+  - Ingress
+  ingresses:    
+  - namespaceLabels: ["tablez-dev"]
+    podLabels: ["tblz-frontend-pod", "tblz-admin-panel-pod"]
+    ports: [7000]
+  - namespaceLabels: ["tblz-dev-cluster-ing-ns"]
+    podLabels: ["ingress-nginx"]
+    ipBlocks: ["14.0.5.0/24"]
+- name: tblz-tblzware-netpol
+  namespace: tablez-dev
+  podLabels:
+    app: tblz-tblzware-pod 
+  policyTypes:
+  - Ingress 
+  ingresses:    
+  - namespaceLabels: ["tablez-dev"]
+    podLabels: ["tblz-store-panel-pod"]
+    ports: [8080]
+  - namespaceLabels: ["tblz-dev-cluster-ing-ns"]
+    podLabels: ["ingress-nginx"]
+    ipBlocks: ["14.0.5.0/24"]
+  
