@@ -1,0 +1,34 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: ratingsweb-gateway  
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "ratings-mesh.internal.wkshpdev.com"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ratingsweb-virtual-service  
+spec:
+  hosts:
+  - "ratings-mesh.<dsns-name>"
+  gateways:
+  - ratingsweb-gateway
+  http:
+  - match:
+    - uri:
+        regex: /?(.*)  
+    route:
+    - destination:
+        host: ratingsweb-service
+        port:
+          number: 80  
+    

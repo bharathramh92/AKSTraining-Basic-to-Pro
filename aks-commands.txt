@@ -342,6 +342,8 @@ helm install $aksIngControllerName ingress-nginx/ingress-nginx --namespace $aksI
 --set controller.defaultBackend.nodeSelector.agentpool=$sysPoolName \
 --set controller.service.annotations.'service\.beta\.kubernetes\.io/azure-load-balancer-internal-subnet'=$aksIngressSubnetName
 
+helm uninstall $aksIngControllerName --namespace $aksIngControllerNSName
+
 #Check Ingress Controller IP
 kubectl get svc -A
 

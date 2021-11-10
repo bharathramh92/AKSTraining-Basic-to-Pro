@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: reviewsfix-virtual-service
+spec:
+  hosts:
+  - reviews
+  http:    
+  - route:
+    - destination:
+        host: reviews
+        subset: v1
+      weight: 50
+#Route 50% of the Traffic to v3
+#v3 has the fix with a timeout value of 2.5 seconds
+    - destination:
+        host: reviews
+        subset: v3
+      weight: 50
+    

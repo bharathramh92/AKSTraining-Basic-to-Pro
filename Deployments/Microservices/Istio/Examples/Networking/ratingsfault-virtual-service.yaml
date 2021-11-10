@@ -1,0 +1,22 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ratingsfault-virtual-service
+spec:
+  hosts:
+  - ratings
+  http:
+#Inject Fault
+  - fault:
+#Introduce Delay
+#Product APIs would throw timeout error
+      delay:
+#50% of the calls would be delayed by 7 seconds
+        percentage:
+          value: 50.0
+#Reduce delay to see change in behaviour of the app
+        fixedDelay: 7s
+    route:
+    - destination:
+        host: ratings
+        subset: v1
