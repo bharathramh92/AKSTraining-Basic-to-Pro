@@ -1118,9 +1118,6 @@ kubectl get po -n primary --context=$CTX_CLUSTER1
 #Check Routing definitions
 kubectl apply -f $istioPath/Examples/Networking/primary-gateway.yaml -n primary --context=$CTX_CLUSTER1
 
-#Destination Rule
-kubectl apply -f $istioPath/Examples/Networking/helloworld-destination-rule.yaml -n primary --context=$CTX_CLUSTER1
-
 kubectl apply -f $istioPath/Examples/HelloWorld/helloworld-app-v2.yaml -n primary --context=$CTX_CLUSTER1
 kubectl get po -n primary --context=$CTX_CLUSTER1
 
