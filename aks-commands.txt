@@ -42,12 +42,12 @@ apimSubnetName=""
 apimSubnetPrefix=""
 apimSubnetId=
 sysPoolName=akssyspool
-sysPoolNodeSize="Standard_DS3_v2"
+sysPoolNodeSize="Standard_DS2_v2"
 sysPoolNodeCount=3
 sysPoolMaxPods=30
 sysPoolMaxNodeCount=5
 apiPoolName=aksapipool
-apiPoolNodeSize="Standard_DS3_v2"
+apiPoolNodeSize="Standard_DS2_v2"
 apiPoolNodeCount=3
 apiPoolMaxPods=30
 apiPoolMaxNodeCount=5
@@ -72,6 +72,8 @@ aadTenantID="3851f269-b22b-4de6-97d6-aa9fe60fe301"
 objectId="890c52c5-d318-4185-a548-e07827190ff6"
 spAppId=""
 spPassword=""
+logWorkspaceName="aks-train-lw"
+lwResourceGroup="monitoring-workshop-rg"
 
 #Login to Azure
 az login --tenant $tenantId
@@ -215,6 +217,14 @@ az keyvault set-policy -n $keyVaultName -g $aksResourceGroup --key-permissions g
 keyvaultId=$(az keyvault show -n $keyVaultName -g $aksResourceGroup --query="id" -o tsv)
 echo $keyvaultId
 
+#Get LogAnalytics Workspace
+logWorkspaceId=$(az monitor log-analytics workspace show -n $logWorkspaceName -g $lwResourceGroup --query="id" -o tsv)
+echo $logWorkspaceId
+
+#Assign Role to Service Principal for the LogAnalytics Workspace
+az role assignment create --assignee $spAppId --role "Contributor" --scope $logWorkspaceId
+
+
 ================================================================================
 
 Setup - Day 1
@@ -236,7 +246,7 @@ az aks create --name $clusterName \
 --enable-aad \
 --aad-admin-group-object-ids $aadAdminGroupIDs \
 --aad-tenant-id $aadTenantID \
---attach-acr $acrName
+--attach-acr $acrName --workspace-resource-id $logWorkspaceId
 
 #Connect to AKS cluster and check status
 az aks get-credentials -g $aksResourceGroup --name $clusterName --admin --overwrite
@@ -332,10 +342,18 @@ helm install $aksIngControllerName ingress-nginx/ingress-nginx --namespace $aksI
 --set controller.defaultBackend.nodeSelector.agentpool=$sysPoolName \
 --set controller.service.annotations.'service\.beta\.kubernetes\.io/azure-load-balancer-internal-subnet'=$aksIngressSubnetName
 
+#Check Ingress Controller IP
+kubectl get svc -A
+
 #Create Namespaces
-kubectl create ns aks-train-dev // DEV workloads
-kubectl create ns aks-train-qa // QA workloads
-kubectl create ns aks-train-smoke // Smoke Test
+#DEV workloads
+kubectl create ns aks-train-dev
+
+#QA workloads
+kubectl create ns aks-train-qa
+
+#Smoke Test
+kubectl create ns aks-train-smoke
 
 /*
 #Deploy Application Gateway
@@ -369,6 +387,9 @@ helm install rbac-chart -n aks-train-qa $setupFolderPath/Helms/rbac-chart/ -f $s
 #helm uninstall rbac-chart
 
 #Check access by multiple login ids
+az aks get-credentials -g $aksResourceGroup --name $clusterName
+kubectl get no
+kubectl get ns
 
 ================================================================================
 
@@ -409,10 +430,10 @@ Ratings App - DEV
 #Deploy more apps - Ratings app
 
 #Deploy backend Mongo DB as container
-kubectl create ns db --context=$CTX_CLUSTER1
+kubectl create ns db
 
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm search repo bitnami
+helm repo update
 
 helm install ratingsdb bitnami/mongodb -n db \
 --set auth.username=ratingsuser,auth.password=ratingspwd,auth.database=ratingsdb \
@@ -431,7 +452,7 @@ https://github.com/monojit18/mslearn-aks-workshop-ratings-api.git
 #This docker build but performed in a Cloud Agent(VM) by ACR
 az acr build -t $acrName.azurecr.io/ratings-api:v1.0.0 -r $acrName .
 
-kubectl create secret generic aks-workshop-mongo-secret -n aks-train-dev --context=$CTX_CLUSTER1 \
+kubectl create secret generic aks-workshop-mongo-secret -n aks-train-dev \
 --from-literal=MONGOCONNECTION="mongodb://ratingsuser:ratingspwd@ratingsdb-mongodb.db:27017/ratingsdb"
 
 #Change <acrName> in the $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml

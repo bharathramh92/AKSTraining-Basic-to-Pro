@@ -1,13 +1,13 @@
 ingress:
   name: aks-workshop-ingress
-  namespace: aks-workshop-dev
+  namespace: aks-train-dev
   annotations:
     ingressClass: nginx
     proxyBodySize: "10m"
     enableCors: "true"
     rewriteTarget: /$1    
   hosts:
-  - name: dev.internal.wkshpdev.com
+  - name: aks-train-dev.internal.wkshpdev.com
     paths:    
     - path: /?(.*)
       pathType: Prefix
