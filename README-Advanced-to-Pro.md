@@ -312,7 +312,7 @@
 
     ```bash
     primaryResourceGroup=$aksResourceGroup
-    primaryClusterName=$clusterName
+    primaryClusterName="primary-mesh-cluster"
     secondaryResourceGroup="secondary-workshop-rg"
     secondaryClusterName="secondary-mesh-cluster"
     primaryAcrName=$acrName
@@ -550,6 +550,10 @@
   - **Service Mirroring or Shadowing**
 
     ![service-mirros](./Assets/istio-mirroring.png)
+
+    
+
+    ![k8s-mirroring-cross](./Assets/k8s-mirroring-cross.png)
 
     
 

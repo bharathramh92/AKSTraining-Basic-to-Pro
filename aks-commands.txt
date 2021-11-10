@@ -989,7 +989,7 @@ Remove Nginx Ingress Controller
 #Set CLI Variables for Istio
 ================================================================================
 primaryResourceGroup=$aksResourceGroup
-primaryClusterName=$clusterName
+primaryClusterName="primary-mesh-cluster"
 secondaryResourceGroup="secondary-workshop-rg"
 secondaryClusterName="secondary-mesh-cluster"
 primaryAcrName=$acrName
