@@ -6,10 +6,15 @@ ingress:
     proxyBodySize: "10m"
     enableCors: "true"
     rewriteTarget: /$1
+  tls:
+  - hosts:
+    - "*.<dns-name>"
+    secretName: aks-workshop-tls-secret
   hosts:
-  - name: qa.<dns-name>
+  - name: qa-prv.<dns-name>
     paths:
     - path: /?(.*)
       pathType: prefix
       service: ratingsweb-service
-      port: 80
+      port: 80 
+  

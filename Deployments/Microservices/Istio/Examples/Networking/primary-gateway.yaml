@@ -11,9 +11,8 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    #Ingress Gateway DNS host of Primary Cluster
-    # - "primary-mesh.internal.wkshpdev.com"
-    - "20.88.166.200.nip.io"
+#Ingress Gateway DNS host of Primary Cluster
+    - "primary-mesh.<dns-name>"
 
 ---
 apiVersion: networking.istio.io/v1alpha3
@@ -22,9 +21,8 @@ metadata:
   name: primary-virtual-service
 spec:
   hosts:
-  #Ingress Gateway DNS host of Primary Cluster
-  # - "primary-mesh.internal.wkshpdev.com"
-  - "20.88.166.200.nip.io"
+#Ingress Gateway DNS host of Primary Cluster
+  - "primary-mesh.<dns-name>"
   gateways:
   - primary-gateway
   http:

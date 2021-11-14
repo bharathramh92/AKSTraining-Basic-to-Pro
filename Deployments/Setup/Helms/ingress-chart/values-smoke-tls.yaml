@@ -1,0 +1,19 @@
+ingress:
+  name: smoke-ingress
+  namespace: smoke
+  annotations:
+   ingressClass: nginx
+   enableCors: "true"
+   rewriteTarget: /$1
+  tls:
+  - hosts:
+    - "*.<dns-name>"
+    secretName: aks-workshop-tls-secret
+  hosts:
+  - name: smoke-prv.<dns-name>
+    paths:
+    - path: /nginx/?(.*)
+      pathType: prefix
+      service: nginx-svc
+      port: 80
+  

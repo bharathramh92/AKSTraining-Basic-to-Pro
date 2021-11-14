@@ -135,7 +135,7 @@ echo $aksVnetId
 az network vnet subnet create -n $aksSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $aksSubnetPrefix
 aksSubnetId=$(az network vnet subnet show -n $aksSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
 echo $aksSubnetId
-
+/*
 az network nsg create -g $aksResourceGroup -n $aksVnetName-$aksSubnetName-$location
 
 az network nsg rule create -n AllowCorpNet --nsg-name $aksVnetName-$aksSubnetName-$location -g $aksResourceGroup \
@@ -148,46 +148,17 @@ az network nsg rule create -n AllowSAW --nsg-name $aksVnetName-$aksSubnetName-$l
 
 az network vnet subnet update --name $aksSubnetName --vnet-name $aksVnetName -g $aksResourceGroup \
 --network-security-group $aksVnetName-$aksSubnetName-$location
+*/
 
 #Deploy Ingress Subnet inside Spoke Virtual Network
 az network vnet subnet create -n $aksIngressSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $aksIngressSubnetPrefix
 aksIngressSubnetId=$(az network vnet subnet show -n $aksIngressSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
 echo $aksIngressSubnetId
 
-az network nsg create -g $aksResourceGroup -n $aksVnetName-$aksIngressSubnetName-$location
-
-az network nsg rule create -n AllowCorpNet --nsg-name $aksVnetName-$aksIngressSubnetName-$location -g $aksResourceGroup \
---access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "*" \
---destination-address-prefixes "*" --destination-port-ranges "*" --priority 2700
-
-az network nsg rule create -n AllowSAW --nsg-name $aksVnetName-$aksIngressSubnetName-$location -g $aksResourceGroup \
---access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "*" \
---destination-address-prefixes "*" --destination-port-ranges "*" --priority 2701
-
-az network vnet subnet update --name $aksIngressSubnetName --vnet-name $aksVnetName -g $aksResourceGroup \
---network-security-group $aksVnetName-$aksIngressSubnetName-$location
-
 #Deploy Application Gateway Subnet inside Spoke Virtual Network
 az network vnet subnet create -n $appgwSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $appgwSubnetPrefix
 appgwSubnetId=$(az network vnet subnet show -n $appgwSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --query="id" -o tsv)
 echo $appgwSubnetId
-
-az network nsg create -g $aksResourceGroup -n $aksVnetName-$appgwSubnetName-$location
-
-az network nsg rule create -n AllowCorpNet --nsg-name $aksVnetName-$appgwSubnetName-$location -g $aksResourceGroup \
---access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "*" \
---destination-address-prefixes "*" --destination-port-ranges "*" --priority 2700
-
-az network nsg rule create -n AllowSAW --nsg-name $aksVnetName-$appgwSubnetName-$location -g $aksResourceGroup \
---access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "*" \
---destination-address-prefixes "*" --destination-port-ranges "*" --priority 2701
-
-az network nsg rule create -n GatewayManger --nsg-name $aksVnetName-$appgwSubnetName-$location -g $aksResourceGroup \
---access Allow --direction Inbound --source-address-prefixes "*" --source-port-ranges "65200-65535" \
---destination-address-prefixes "*" --destination-port-ranges "*" --priority 2702
-
-az network vnet subnet update --name $appgwSubnetName --vnet-name $aksVnetName -g $aksResourceGroup \
---network-security-group $aksVnetName-$appgwSubnetName-$location
 
 #Deploy API Management Subnet inside Spoke Virtual Network
 az network vnet subnet create -n $apimSubnetName --vnet-name $aksVnetName -g $aksResourceGroup --address-prefixes $apimSubnetPrefix
@@ -246,12 +217,14 @@ az aks create --name $clusterName \
 --enable-aad \
 --aad-admin-group-object-ids $aadAdminGroupIDs \
 --aad-tenant-id $aadTenantID \
---attach-acr $acrName --workspace-resource-id $logWorkspaceId
+--attach-acr $acrName --workspace-resource-id $logWorkspaceId \
+--dns-name-prefix $clusterName
 
 #Connect to AKS cluster and check status
 az aks get-credentials -g $aksResourceGroup --name $clusterName --admin --overwrite
 kubectl get no
 kubectl get ns
+kubectl get po -A
 
 #Update System nodepool with AutoScaling
 az aks nodepool update --cluster-name $clusterName --resource-group $aksResourceGroup \
@@ -989,7 +962,7 @@ Remove Nginx Ingress Controller
 #Set CLI Variables for Istio
 ================================================================================
 primaryResourceGroup=$aksResourceGroup
-primaryClusterName="primary-mesh-cluster"
+primaryClusterName=$clusterName
 secondaryResourceGroup="secondary-workshop-rg"
 secondaryClusterName="secondary-mesh-cluster"
 primaryAcrName=$acrName

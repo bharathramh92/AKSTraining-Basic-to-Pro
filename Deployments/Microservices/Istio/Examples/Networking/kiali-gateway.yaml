@@ -11,8 +11,8 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    #Ingress Gateway DNS host of Primary Cluster
-    - "kiali-mesh.internal.wkshpdev.com"
+#Ingress Gateway DNS host of Primary Cluster
+    - "kiali-mesh.<dns-name>"
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -20,7 +20,8 @@ metadata:
   name: kiali-virtual-service
 spec:
   hosts:
-  - "kiali-mesh.internal.wkshpdev.com"
+#Ingress Gateway DNS host of Primary Cluster
+  - "kiali-mesh.<dns-name>"  
   gateways:
   - kiali-gateway
   http:                  

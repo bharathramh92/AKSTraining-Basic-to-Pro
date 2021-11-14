@@ -1,0 +1,26 @@
+ingress:
+  name: aks-workshop-ssltest-ingress
+  namespace: ssltest
+  annotations:
+    ingressClass: nginx
+    proxyBodySize: "10m"
+    enableCors: "true"
+    rewriteTarget: /$1
+    backendProtocol: "HTTPS"
+  tls:
+  - hosts:
+    - "*.<dns-name>"
+    secretName: aks-workshop-tls-secret
+  hosts:
+  - name: proxy.<dns-name>
+    paths:
+    - path: /?(.*)
+      pathType: Prefix
+      service: api-proxy-svc
+      port: 443 
+  - name: bkend.<dns-name>
+    paths:
+    - path: /?(.*)
+      pathType: Prefix
+      service: api-bkend-svc
+      port: 443    

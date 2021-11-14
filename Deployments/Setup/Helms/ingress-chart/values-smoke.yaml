@@ -6,7 +6,7 @@ ingress:
    enableCors: "true"
    rewriteTarget: /$1
   hosts:
-  - name: aks-train-smoke.internal.wkshpdev.com
+  - name: aks-train-smoke.<dns-name>
     paths:  
     - path: /healthz/?(.*)
       pathType: Prefix

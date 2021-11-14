@@ -20,6 +20,7 @@ metadata:
   name: secondary-virtual-service
 spec:
   hosts:
+#Ingress Gateway DNS host of Secondary cluster  
   - "seocndsry-mesh.<dns-name>"
   
   #IMPORTANT: Shadow Suffix - All Mirrored service is sent from primary cluster

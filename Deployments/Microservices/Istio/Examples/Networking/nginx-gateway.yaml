@@ -10,8 +10,9 @@ spec:
       number: 80
       name: http
       protocol: HTTP
-    hosts:    
-    - "smoke-mesh.internal.wkshpdev.com"
+    hosts:
+#Ingress Gateway DNS host of Primary Cluster
+    - "smoke-mesh.<dns-name>"
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -19,11 +20,11 @@ metadata:
   name: nginx-virtual-service
 spec:
   hosts:
-  #Ingress Gateway DNS host of Primary Cluster    
+#Ingress Gateway DNS host of Primary Cluster
   - "smoke-mesh.<dns-name>"
   gateways:
   - nginx-gateway
-  http:                  
+  http:
   - match:
     - uri:
         prefix: /nginx

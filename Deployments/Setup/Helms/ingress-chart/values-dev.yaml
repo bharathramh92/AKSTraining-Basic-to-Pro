@@ -7,7 +7,7 @@ ingress:
     enableCors: "true"
     rewriteTarget: /$1    
   hosts:
-  - name: aks-train-dev.internal.wkshpdev.com
+  - name: aks-train-dev.<dns-name>
     paths:    
     - path: /?(.*)
       pathType: Prefix
