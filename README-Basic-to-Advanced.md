@@ -1,8 +1,6 @@
 # AKS HOL - Basic to Advanced
 
-## Introduction
 
-## Purpose
 
 ## Understand K8s High Level Architecture
 
