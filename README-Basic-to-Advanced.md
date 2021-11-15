@@ -884,5 +884,21 @@
 
 ## References
 
+- [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks)
+- [AKS Networking](https://docs.microsoft.com/en-us/azure/aks/concepts-network)
+- [Cluster Isloation](https://docs.microsoft.com/en-us/azure/aks/operator-best-practices-cluster-isolation)
+- [Resource Management](https://docs.microsoft.com/en-us/azure/aks/developer-best-practices-resource-management)
+- [Scheduling](https://docs.microsoft.com/en-us/azure/aks/operator-best-practices-scheduler)
+- [Advanced Scheduling](https://docs.microsoft.com/en-us/azure/aks/operator-best-practices-advanced-scheduler)
+- [AKS Storage](https://docs.microsoft.com/en-us/azure/aks/concepts-storage)
+- [AKS Backups](https://docs.microsoft.com/en-us/azure/aks/operator-best-practices-storage)
+- [Scaling AKS Clustrer](https://docs.microsoft.com/en-us/azure/aks/concepts-scale)
+- [Security in AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/concepts-security)
+- [AKS Mionitoring](https://docs.microsoft.com/en-us/azure/aks/monitor-aks)
+- [Upgrade AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster)
+- [Security and Kernel Updates](https://docs.microsoft.com/en-us/azure/aks/node-updates-kured)
+- [Patching](https://docs.microsoft.com/en-us/azure/architecture/operator-guides/aks/aks-upgrade-practices)
+- [AKS Best Practices](https://docs.microsoft.com/en-us/azure/aks/best-practices?toc=https%3A%2F%2Fdocs.microsoft.com%2Fen-us%2Fazure%2Farchitecture%2Ftoc.json&bc=https%3A%2F%2Fdocs.microsoft.com%2Fen-us%2Fazure%2Farchitecture%2Fbread%2Ftoc.json)
+
 
 
