@@ -705,6 +705,23 @@
     #helm upgrade netpol-ratingsweb-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-ratingsweb-dev.yaml
     #helm uninstall netpol-ratingsweb-chart -n aks-train-dev
     ```
+    
+  - **Network Policies - Test**
+
+    ```bash
+    #Call Ratings app Url; check end-to-end connectivity
+    curl -k https://dev-<appgw-dns-name>/
+    
+    podName=$(kubectl get pod -l app=nginx-pod -n primary -o jsonpath='{.items[0].metadata.name}')
+    #Should FAIL
+    kubectl exec -it $podName -n aks-train-smoke -- curl -k http://ratingsapp-web.aks-train-dev.svc/
+    
+    podName=$(kubectl get pod -l app=ratingsweb-pod -n primary -o jsonpath='{.items[0].metadata.name}')
+    #Should SUCCEED
+    kubectl exec -it $podName -n aks-train-dev -- curl -k http://ratingsapp-web.aks-train-dev.svc/
+    ```
+
+    
 
 - **Monitoring and Logging**
 
