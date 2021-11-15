@@ -1,0 +1,21 @@
+netpols:  
+  name: ratingsweb-netpol
+  namespace: aks-workshop-dev
+  podLabels:
+    app: ratingsweb-pod
+  policyTypes:
+  - Ingress
+  - Egress
+  ingresses:
+  - namespaceLabels:
+      name: aks-workshop-cluster-ing-ns    
+    ports:
+    - protocol: TCP
+      port: 8080
+  egresses:
+  - {}
+  # - podLabels:
+  #     app: ratingsapi-pod 
+  #   ports:
+  #   - protocol: TCP
+  #     port: 3000
