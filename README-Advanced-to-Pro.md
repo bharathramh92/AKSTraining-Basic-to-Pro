@@ -1,9 +1,5 @@
 # AKS HOL - Advanced to Pro
 
-## Introduction
-
-## Purpose
-
 ## Pre-Requisites
 
 ![AKS-Ref-Achitecture-v2.2](./Assets/AKS-Ref-Achitecture-v2.2.png)
