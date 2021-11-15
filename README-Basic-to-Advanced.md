@@ -792,11 +792,9 @@
     helm install aks-train-grafana -n grafana-monitor grafana/grafana --set nodeSelector.agentpool=$sysPoolName
     #helm uninstall aks-train-grafana -n grafana-monitor
     
-    
     #Integrate Grafan with Azure Monitor
     https://grafana.com/grafana/plugins/grafana-azure-monitor-datasource/
     ```
-
     
 
 - **Load Testing**
@@ -807,12 +805,11 @@
   #Load testing with JMeter
   https://techcommunity.microsoft.com/t5/azure-global/scalable-apache-jmeter-test-framework-using-azure-kubernetes/ba-p/1197379
   
-  
   #UNCOMMENT: HPA in .helmignore for RatingsApi app
   #Redeploy RatingsApi app
   #Open JMeter
   ```
-
+  
 - **Cluster Upgrade**
 
   - Refer [Here](https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster)
