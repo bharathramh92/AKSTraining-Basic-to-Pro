@@ -332,6 +332,9 @@ kubectl create ns aks-train-smoke
 
 /*
 #Deploy Application Gateway
+Portal - https://docs.microsoft.com/en-us/azure/application-gateway/quick-create-portal
+CLI - https://docs.microsoft.com/en-us/azure/application-gateway/quick-create-cli
+
 az deployment group create -f ./aksauto-appgw-deploy.bicep -g $aksResourceGroup \
 --parameters @./aksauto-appgw-deploy.parameters.json \
 --parameters applicationGatewayName=$appgwName \
