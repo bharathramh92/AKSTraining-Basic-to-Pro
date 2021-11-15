@@ -1,6 +1,6 @@
 netpols:  
   name: ratingsweb-netpol
-  namespace: aks-workshop-dev
+  namespace: aks-train-dev
   podLabels:
     app: ratingsweb-pod
   policyTypes:
