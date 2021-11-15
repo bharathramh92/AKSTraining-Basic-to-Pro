@@ -471,6 +471,14 @@
 
     
 
+    ```bash
+    #Deploy Application Gateway
+    Portal - https://docs.microsoft.com/en-us/azure/application-gateway/quick-create-portal
+    CLI - https://docs.microsoft.com/en-us/azure/application-gateway/quick-create-cli
+    ```
+
+    
+
   - **RBAC**
 
     ```bash
@@ -637,80 +645,129 @@
     curl -k https://qa-<appgw-dns-name>/
     ```
 
+- **Resources Sizing for Containers**
+
+  - Specify Requests for CPU and Memory
+  - Specify Limits for CPU and Memory
+  - Start Low on Both and then increase gradually through Load Testing
+  - Both should depend on the Application running within the Container; and the load that is can handle
+
+  ```yaml
+  #Goto $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+  #Modify values accordingly 
+  #Move from Low to High
+  #Check the differences
+  
+  memoryRequest: "64Mi"
+  cpuRequest: "100m"
+  memoryLimit: "256Mi"
+  cpuLimit: "200m"
+  ```
+
+- **Readiness/Liveness for Containers**
+
+  - Provide Endpoints to check *Readiness* of the Container
+  - Provide Endpoints to check *Liveness* of the Container
+
+  ```yaml
+  #Goto $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+  #Modify values accordingly 
+  #Move from Low to High
+  #Check the differences
+  
+  readinessPort: 3000
+  readinessPath: /healthz
+  livenessPort: 3000
+  livenessPath: /healthz   
+  ```
+
+  
+
 - **Network Policies**
 
   ![AKS-Components-NP](./Assets/AKS-Components-NP.png)
 
-  - **Network Policies - DEV**
+  
+
+  - **Network Policies - Ratings API for DEV**
 
     ```bash
     #East-West Traffic Security
-    helm install netpol-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
+    helm install netpol-ratingsapi-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-ratingsapi-dev.yaml
     
-    #helm upgrade netpol-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
-    #helm uninstall netpol-chart -n aks-train-dev
+    #helm upgrade netpol-ratingsapi-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-ratingsapi-dev.yaml
+    #helm uninstall netpol-ratingsapi-chart -n aks-train-dev
     ```
 
-  - **Network Policies - QA**
+  - **Network Policies - Ratings Web for DEV**
 
     ```bash
-    helm install netpol-chart -n aks-train-qa $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-qa.yaml
+    helm install netpol-ratingsweb-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-ratingsweb-dev.yaml
     
-    #helm upgrade netpol-chart -n aks-train-qa $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-qa.yaml
-    #helm uninstall netpol-chart -n aks-train-qa
-    ```
-
-  - **Network Policies - Smoke**
-
-    ```bash
-    helm install netpol-chart -n aks-train-smoke $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-smoke.yaml
-    
-    #helm upgrade netpol-chart -n aks-train-smoke $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-smoke.yaml
-    #helm uninstall netpol-chart -n aks-train-smoke
-    
-    #Call Ratings app Url; check end-to-end connectivity
-    curl -k https://dev-<appgw-dns-name>/
-    curl -k https://qa-<appgw-dns-name>/
-    curl -k https://smoke-<appgw-dns-name>/nginx
-    
-    podName=$(kubectl get pod -l app=nginx-pod -n primary -o jsonpath='{.items[0].metadata.name}')
-    
-    #Should succeed
-    kubectl exec -it $podName -n aks-train-smoke -- curl -k http://ratingsapp-web.aks-train-dev.svc/
-    
-    #Should succeed
-    kubectl exec -it $podName -n aks-train-smoke -- curl -k http://ratingsapp-web.aks-train-qa.svc/
-    
-    podName=$(kubectl get pod -l app=ratingsweb-pod -n primary -o jsonpath='{.items[0].metadata.name}')
-    
-    #Should FAIL
-    kubectl exec -it $podName -n aks-train-dev -- curl -k http://ratingsapp-web.aks-train-qa.svc/
-    
-    #Should FAIL
-    kubectl exec -it $podName -n aks-train-dev -- curl -k http://nginx-svc.aks-train-smoke.svc/
+    #helm upgrade netpol-ratingsweb-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-ratingsweb-dev.yaml
+    #helm uninstall netpol-ratingsweb-chart -n aks-train-dev
     ```
 
 - **Monitoring and Logging**
 
+  ![oms-1](./Assets/oms-1.png)
+
+  
+
+  ![metric-server](./Assets/metric-server.png)
+
+  
+
   - **Cluster Health**
 
+    ![aks-diag-4](./Assets/aks-diag-4.png)
+
+    
+
+    ![aks-diag-4](./Assets/aks-diag-5.png)
+
+    
+
+    ![aks-diag-4](./Assets/aks-diag-6.png)
+
+    
+
+    ![aks-diag-4](./Assets/aks-diag-7.png)
+
+    
+
   - **Node and Pod Health**
+
+    
+
+    ![azmon-2](./Assets/azmon-1.png)
+
+    
+
+    ![azmon-2](./Assets/azmon-2.png)
 
   - **Observe and Analyze Workload Deployments**
 
     - View Metrics from Azure Portal
-
     - View Insights from Azure Portal
-
     - Create a Dashboard in Azure Portal
-
     - Log Analytics with Container Insights
-
     - Select Pre-defined Queries and Check Results
-
     - Create Azure Monitor Workbook and View Results
+    
+  - **VSCode Extension**
 
-      [Multiple Screenshots - TBD]
+    ![aks-diag-4](./Assets/aks-diag-3.png)
+
+    
+
+    ![aks-diag-4](./Assets/aks-diag-2.png)
+
+    
+
+    ![aks-diag-4](./Assets/aks-diag-1.png)
+
+    
 
   - **Enable Prometheus for AKS**
 
