@@ -506,22 +506,52 @@ curl -k https://qa-<appgw-dns-name>/
 
 ================================================================================
 
-Network Policies - DEV
-=========================
+Resources Sizing for Containers
+================================================================================
+- Specify Requests for CPU and Memory
+- Specify Limits for CPU and Memory
+- Start Low on Both and then increase gradually through Load Testing
+- Both should depend on the Application running within the Container; and the load that is can handle
+
+#Goto $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+#Modify values accordingly 
+#Move from Low to High
+#Check the differences
+
+[Examples]
+
+================================================================================
+
+Readiness/Liveness for Containers
+================================================================================
+- Provide Endpoints to check Readiness of the Container
+- Provide Endpoints to check Liveness of the Container
+
+#Goto $microservicesFolderPath/Helms/ratingsapi-chart/values-dev.yaml
+#Modify values accordingly 
+#Move from Low to High
+#Check the differences
+
+[Examples]
+
+================================================================================
+
+Network Policies - Ratings API for DEV
+=======================================
 [Diagram - Network Policy]
 
 #East-West Traffic Security
-helm install netpol-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
+helm install netpol-ratingsapi-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-ratingsapi-dev.yaml
 
-#helm upgrade netpol-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-dev.yaml
-#helm uninstall netpol-chart -n aks-train-dev
+#helm upgrade netpol-ratingsapi-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-ratingsapi-dev.yaml
+#helm uninstall netpol-ratingsapi-chart -n aks-train-dev
 
-Network Policies - QA
-=========================
-helm install netpol-chart -n aks-train-qa $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-qa.yaml
+Network Policies - Ratings Web for DEV
+=======================================
+helm install netpol-ratingsweb-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-ratingsweb-dev.yaml
 
-#helm upgrade netpol-chart -n aks-train-qa $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-qa.yaml
-#helm uninstall netpol-chart -n aks-train-qa
+#helm upgrade netpol-ratingsweb-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-ratingsweb-dev.yaml
+#helm uninstall netpol-ratingsweb-chart -n aks-train-dev
 
 Network Policies - Smoke
 =========================
@@ -561,6 +591,8 @@ Observe and Analyze Workload Deployments
   #Log Analytics with Container Insights
   #Select Pre-defined Queries and Check Results
   #Create Azure Monitor Workbook and View Results
+
+VSCode Extension
 
 [Multiple Screenshots]
 

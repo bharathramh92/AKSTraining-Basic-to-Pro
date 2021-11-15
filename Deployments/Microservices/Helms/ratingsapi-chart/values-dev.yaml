@@ -18,7 +18,7 @@ deployment:
     readinessPort: 3000
     readinessPath: /healthz
     livenessPort: 3000
-    livenessPath: /healthz
+    livenessPath: /healthz    
     memoryRequest: "64Mi"
     cpuRequest: "100m"
     memoryLimit: "256Mi"
