@@ -2,11 +2,11 @@ AKS - BASIC TO ADVANCED
 ================================================================================================================================================================
 #Local Variables
 
-baseFolderPath="/Users/monojitdattams/Development/Projects/Workshops/AKSWorkshop/AKSTraining-Basic-to-Pro/Deployments"
+baseFolderPath=""
 setupFolderPath="$baseFolderPath/Setup"
 microservicesFolderPath="$baseFolderPath/Microservices"
-tenantId="72f988bf-86f1-41af-91ab-2d7cd011db47"
-subscriptionId="6bdcc705-8db6-4029-953a-e749070e6db6"
+tenantId=""
+subscriptionId=""
 aksResourceGroup="aks-train-rg"
 masterResourceGroup="master-workshop-rg"
 location="eastus"
@@ -64,7 +64,7 @@ aksIngControllerName="aks-train-ing"
 aksIngControllerNSName="$aksIngControllerName-ns"
 aksIngControllerFileName="internal-ingress"
 aksIngControllerFilePath="$baseFolderPath/Setup/Common/internal-ingress.yaml"
-privateDNSZoneName="internal.wkshpdev.com"
+privateDNSZoneName=""
 privateDNSZoneId=
 backendIpAddress=
 aadAdminGroupIDs="6ec3a0a8-a6c6-4cdf-a6e3-c296407a5ec1"
@@ -91,11 +91,11 @@ Pre-Config - Day 0
 #Create Service Principal
 az ad sp create-for-rbac --skip-assignment -n https://aks-train-sp
 {
-  "appId": "be96b485-082f-406b-8271-06dcb442f6f2",
+  "appId": "",
   "displayName": "https://aks-train-sp",
-  "name": "be96b485-082f-406b-8271-06dcb442f6f2",
-  "password": "ClHV~lb5n0MN.4WSiHNBiTnh2Ie5.mHR6_",
-  "tenant": "72f988bf-86f1-41af-91ab-2d7cd011db47"
+  "name": "",
+  "password": "",
+  "tenant": ""
 }
 
 #Set Service Principal variables
