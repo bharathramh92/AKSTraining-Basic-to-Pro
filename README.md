@@ -719,6 +719,36 @@
     podName=$(kubectl get pod -l app=ratingsweb-pod -n primary -o jsonpath='{.items[0].metadata.name}')
     #Should SUCCEED
     kubectl exec -it $podName -n aks-train-dev -- curl -k http://ratingsapp-web.aks-train-dev.svc/
+    
+    #Special Look at the file - $setupFolderPath/Helms/netpol-chart/values-ratingsweb-dev.yaml
+    #Allow all Egress
+      - {}
+    
+    #Enable this to make Egress restrictions
+    # - destinations:
+    #   - podSelector:
+    #       matchLabels:
+    #         app: ratingsapi-pod
+    
+    #Enable/Diasble this to see changes in Egress flow
+    #   - namespaceSelector:
+    #       matchLabels:
+    #         name: kube-system
+    #     podSelector:
+    #       matchLabels:
+    #         k8s-app: kube-dns
+    
+    #Enable this to make Egress restrictions
+    #   ports:
+    #   - protocol: TCP
+    #     port: 3000
+    
+    #Enable/Diasble this to see changes in Egress flow
+    #   - protocol: TCP
+    #     port: 53
+    #   - protocol: UDP
+    #     port: 53
+    
     ```
 
     
