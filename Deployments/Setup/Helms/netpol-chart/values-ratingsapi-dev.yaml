@@ -1,18 +1,19 @@
 netpols:
   name: ratingsapi-netpol
-  namespace: aks-train-dev
+  namespace: aks-workshop-dev
   podLabels:
     app: ratingsapi-pod
   policyTypes:
   - Ingress
   ingresses:
-  - podLabels:
-      app: ratingsweb-pod 
+  - sources:
+    - podSelector:
+        matchLabels:
+          app: ratingsweb-pod
+    - namespaceSelector:
+        matchLabels:
+          name: aks-workshop-cluster-ing-ns      
     ports:
     - protocol: TCP
       port: 3000
-  - namespaceLabels:
-      name: aks-workshop-cluster-ing-ns    
-    ports:
-    - protocol: TCP
-      port: 3000
+    

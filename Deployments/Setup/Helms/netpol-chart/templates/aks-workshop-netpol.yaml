@@ -14,53 +14,47 @@ spec:
   ingress:
   {{- range $ingress := $netpol.ingresses }}
   - from:
-  {{ if $ingress.namespaceLabels }}
+  {{- range $source := $ingress.sources }}
+    {{ if $source.namespaceSelector }}
     - namespaceSelector:
-        matchLabels:
-        {{ toYaml $ingress.namespaceLabels | nindent 10 }}
-  {{ end }}
-  {{ if $ingress.podLabels }}
+    {{ toYaml $source.namespaceSelector | nindent 8 }}
+    {{ end }}
+    {{ if and $source.namespaceSelector $source.podSelector }}    
+      podSelector:
+    {{ toYaml $source.podSelector | nindent 8 }}
+    {{ end }}
+    {{ if $source.podSelector }}    
     - podSelector:
-        matchLabels:
-        {{ toYaml $ingress.podLabels | nindent 10 }}
-  {{ end }}
-  {{ if $ingress.ipBlock }}
-    - ipBlock:
-        cidr: {{ $ingress.ipBlock.cidr }} 
-  {{ end }}
-  {{ if $ingress.ports }}
-    {{- range $port := $ingress.ports }}   
+    {{ toYaml $source.podSelector | nindent 8 }}
+    {{ end }}    
+  {{- end }}
+    {{ if $ingress.ports }}    
     ports:
-    - protocol: {{ $port.protocol }}
-      port: {{ $port.port }}
-    {{- end }}
-  {{ end }}
+    {{ toYaml $ingress.ports | nindent 4 }}
+    {{ end }}
   {{- end }} 
-  {{ end }} 
-  {{ if $netpol.egresses }} 
+  {{ end }}
+  {{ if $netpol.egresses }}
   egress:
   {{- range $egress := $netpol.egresses }}
   - to:
-  {{ if $egress.namespaceLabels }}
+  {{- range $destination := $egress.destinations }}
+    {{ if $destination.namespaceSelector }}
     - namespaceSelector:
-        matchLabels:
-        {{ toYaml $egress.namespaceLabels | nindent 10 }}
-  {{ end }}
-  {{ if $egress.podLabels }}
+    {{ toYaml $destination.namespaceSelector | nindent 8 }}
+    {{ end }}
+    {{ if and $destination.namespaceSelector $destination.podSelector }}    
+      podSelector:
+    {{ toYaml $destination.podSelector | nindent 8 }}
+    {{ end }}
+    {{ if $destination.podSelector }}    
     - podSelector:
-        matchLabels:
-        {{ toYaml $egress.podLabels | nindent 10 }}
-  {{ end }}
-  {{ if $egress.ipBlock }}
-    - ipBlock:
-        cidr: {{ $egress.ipBlock.cidr }}
-  {{ end }}
-  {{ if $egress.ports }}
-    {{- range $port := $egress.ports }}   
+    {{ toYaml $destination.podSelector | nindent 8 }}
+    {{ end }}    
+  {{- end }}
+    {{ if $egress.ports }}    
     ports:
-    - protocol: {{ $port.protocol }}
-      port: {{ $port.port }}
-    {{- end }} 
+    {{ toYaml $egress.ports | nindent 4 }}
+    {{ end }}
+  {{- end }} 
   {{ end }}
-  {{- end }}    
-{{ end }}
