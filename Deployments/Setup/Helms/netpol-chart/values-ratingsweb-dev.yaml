@@ -15,21 +15,21 @@ netpols:
     - protocol: TCP
       port: 8080
   egresses:
-  # - {}
-  - destinations:
-    - podSelector:
-        matchLabels:
-          app: ratingsapi-pod
-    - namespaceSelector:
-        matchLabels:
-          name: kube-system
-      podSelector:
-        matchLabels:
-          k8s-app: kube-dns
-    ports:
-    - protocol: TCP
-      port: 3000
-    - protocol: TCP
-      port: 53
-    - protocol: UDP
-      port: 53
+  - {}
+  # - destinations:
+  #   - podSelector:
+  #       matchLabels:
+  #         app: ratingsapi-pod
+  #   - namespaceSelector:
+  #       matchLabels:
+  #         name: kube-system
+  #     podSelector:
+  #       matchLabels:
+  #         k8s-app: kube-dns
+  #   ports:
+  #   - protocol: TCP
+  #     port: 3000
+  #   - protocol: TCP
+  #     port: 53
+  #   - protocol: UDP
+  #     port: 53
