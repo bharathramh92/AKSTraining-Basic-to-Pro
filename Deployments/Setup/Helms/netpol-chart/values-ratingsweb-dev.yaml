@@ -15,20 +15,29 @@ netpols:
     - protocol: TCP
       port: 8080
   egresses:
+  #Allow all Egress
   - {}
+
+  #Enable this to make Egress restrictions
   # - destinations:
   #   - podSelector:
   #       matchLabels:
   #         app: ratingsapi-pod
+
+  #Enable/Diasble this to see changes in Egress flow
   #   - namespaceSelector:
   #       matchLabels:
   #         name: kube-system
   #     podSelector:
   #       matchLabels:
   #         k8s-app: kube-dns
+
+  #Enable this to make Egress restrictions
   #   ports:
   #   - protocol: TCP
   #     port: 3000
+
+  #Enable/Diasble this to see changes in Egress flow
   #   - protocol: TCP
   #     port: 53
   #   - protocol: UDP
