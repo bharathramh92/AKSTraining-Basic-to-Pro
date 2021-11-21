@@ -85,7 +85,7 @@
   masterResourceGroup="master-workshop-rg"
   location="eastus"
   clusterName="aks-train-cluster"
-  version="1.20.7"
+  version="1.20.9"
   acrName="akstrnacr"
   acrId=
   keyVaultName="aks-train-kv"
@@ -111,9 +111,9 @@
   appgwSubnetName="aks-train-appgw-subnet"
   appgwSubnetPrefix="18.0.3.0/27"
   appgwSubnetId=
-  apimName=""
-  apimSubnetName=""
-  apimSubnetPrefix=""
+  apimName="aks-train-apim"
+  apimSubnetName="aks-train-apim-subnet"
+  apimSubnetPrefix="18.0.4.0/27"
   apimSubnetId=
   sysPoolName=akssyspool
   sysPoolNodeSize="Standard_DS2_v2"
