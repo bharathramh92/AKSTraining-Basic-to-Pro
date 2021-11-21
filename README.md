@@ -293,6 +293,18 @@
     az role assignment create --assignee $spAppId --role "Contributor" --scope $logWorkspaceId
     ```
     
+  - **Network Peering**
+
+    ```bash
+    #Master Vnet to AKS Peering
+    az network vnet peering create -n $masterAKSPeering --remote-vnet $aksVnetName \
+    -g $masterResourceGroup --vnet-name $masterVnetName
+    
+    #AKS Vnet to Master Peering
+    az network vnet peering create -n $aksMasterPeering --remote-vnet $masterVnetName \
+    -g $masterResourceGroup --vnet-name $aksVnetName
+    ```
+    
     
 
 - **Setup**
@@ -907,6 +919,8 @@
   
 - **Cluster Upgrade**
 
+  ![cluster-upgrade](./Assets/cluster-upgrade.png)
+
   - Refer [Here](https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster)
 
   - **Max surge**
@@ -989,7 +1003,7 @@
 - [AKS Backups](https://docs.microsoft.com/en-us/azure/aks/operator-best-practices-storage)
 - [Scaling AKS Clustrer](https://docs.microsoft.com/en-us/azure/aks/concepts-scale)
 - [Security in AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/concepts-security)
-- [AKS Mionitoring](https://docs.microsoft.com/en-us/azure/aks/monitor-aks)
+- [AKS Monitoring](https://docs.microsoft.com/en-us/azure/aks/monitor-aks)
 - [Upgrade AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster)
 - [Security and Kernel Updates](https://docs.microsoft.com/en-us/azure/aks/node-updates-kured)
 - [Patching](https://docs.microsoft.com/en-us/azure/architecture/operator-guides/aks/aks-upgrade-practices)
