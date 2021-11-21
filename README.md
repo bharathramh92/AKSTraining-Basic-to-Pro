@@ -65,11 +65,14 @@
 - Enhanced Control of K8s cluster
   - K8s REST API
   - Admission Webhook; Validation Webhook
+  
 - Integration with APIM
+
 - Integration with DevOps
+
 - GitOps
 
-
+  
 
 ## HOL
 
@@ -281,14 +284,15 @@
   - **Log Analytics Workspace**
 
     ```bash
-    #Get LogAnalytics Workspace
+    #Deploy LogAnalytics Workspace
+    az monitor log-analytics workspace create -n $logWorkspaceName -g $lwResourceGroup
     logWorkspaceId=$(az monitor log-analytics workspace show -n $logWorkspaceName -g $lwResourceGroup --query="id" -o tsv)
     echo $logWorkspaceId
     
     #Assign Role to Service Principal for the LogAnalytics Workspace
     az role assignment create --assignee $spAppId --role "Contributor" --scope $logWorkspaceId
     ```
-
+    
     
 
 - **Setup**
@@ -375,7 +379,7 @@
 
 - **Post-Config**
 
-  ![aks-short-view](./Assets/appgw-internals.png)
+  ![appgw-overview](./Assets/appgw-overview.png)
 
   
 
@@ -465,7 +469,7 @@
 
   - **Deploy Application Gateway**
 
-    ![appgw-overview](./Assets/appgw-overview.png)
+    ![appgw-overview](./Assets/appgw-internals.png)
 
     
 
@@ -475,7 +479,55 @@
     CLI - https://docs.microsoft.com/en-us/azure/application-gateway/quick-create-cli
     ```
 
-    
+    - Create **Application Gateway**
+
+      - Ideally this should be done through ARM template; for this exercise we would assume that the resource would be created using Azure Portal
+
+    - Configure **Backend Pool**
+
+      ![backendPool-1](./Assets/backendPool-1.png)
+
+      
+
+      ![backendPool-1](./Assets/backendPool-2.png)
+
+      
+
+    - Configure **Multi-site Listener**
+
+      ![http-settings-1](./Assets/listeners-1.png)
+
+      
+
+      ![http-settings-1](./Assets/listeners-2.png)
+
+    - Configure **Http Settings**
+
+      ![http-settings-1](./Assets/http-settings-1.png)
+
+      
+
+      ![http-settings-1](./Assets/http-settings-2.png)
+
+      
+
+      ![http-settings-1](./Assets/http-settings-3.png)
+
+      
+
+    - Configure **Rules**
+
+      ![http-settings-1](./Assets/rules-1.png)
+
+      
+
+      ![http-settings-1](./Assets/rules-2.png)
+
+      
+
+      ![http-settings-1](./Assets/rules-3.png)
+
+      
 
   - **RBAC**
 
@@ -496,8 +548,6 @@
     kubectl get no
     kubectl get ns
     ```
-
-    
 
   - **Ingress - Smoke**
 
