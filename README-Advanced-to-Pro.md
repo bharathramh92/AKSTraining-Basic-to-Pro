@@ -59,7 +59,7 @@
   masterResourceGroup="master-workshop-rg"
   location="eastus"
   clusterName="aks-train-cluster"
-  version="1.20.7"
+  version="1.20.9"
   acrName="akstrnacr"
   acrId=
   keyVaultName="aks-train-kv"
@@ -85,9 +85,9 @@
   appgwSubnetName="aks-train-appgw-subnet"
   appgwSubnetPrefix="18.0.3.0/27"
   appgwSubnetId=
-  apimName=""
-  apimSubnetName=""
-  apimSubnetPrefix=""
+  apimName="aks-train-apim"
+  apimSubnetName="aks-train-apim-subnet"
+  apimSubnetPrefix="18.0.4.0/27"
   apimSubnetId=
   sysPoolName=akssyspool
   sysPoolNodeSize="Standard_DS2_v2"
@@ -281,6 +281,18 @@
 
   - Refer [Policy for K8s](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes)
 
+    ![policy-aks-1](./Assets/policy-aks-1.png)
+    
+    
+    
+    ![policy-aks-1](./Assets/policy-aks-2.png)
+    
+    
+    
+    ![policy-aks-1](./Assets/policy-aks-3.png)
+    
+    
+    
     
 
 - **Service Mesh**
@@ -371,6 +383,11 @@
     #Istio Ingress gateway with public or private IP
     kubectl get svc -n istio-system
     
+    #If Ingress Gateway installed with Public IP Address
+    #Launch Kiali on localhost as a background process
+    istioctl dashboard kial&
+    
+    #If Ingress Gateway installed with Private IP Address
     #Need a Gateway to expose the Kiali service outside
     #Check Routing definitions
     #Replace <dns-name>
@@ -385,17 +402,17 @@
     #Launch Kiali in the browser
     curl -k https://kiali-<appgw-dns-name>/
     ```
-
+  
   - **Observability**
-
+  
     ![service-mirros](./Assets/istio-metrics-graph.png)
-
+  
     
-
+  
     ![service-mirros](./Assets/istio-fault.png)
-
+  
     
-
+  
     ```bash
     #Deploy Apps to view in Istio
     
@@ -434,11 +451,11 @@
     #Try the follwoing URL in the Browser or do a cUrl
     curl -k https://ratings-<appgw-dns-name>/
     ```
-
+  
   - **Traffic Shifting**
-
+  
     ![service-mirros](./Assets/istio-trafficplit.png)
-
+  
     ```bash
     #Traffic Shifting
     kubectl apply -f $istioPath/Examples/HelloWorld/helloworld-app.yaml -n primary --context=$CTX_CLUSTER1
@@ -463,11 +480,11 @@
     
     #Check Routing behaviour again
     ```
-
+  
   - **Blue/Green**
-
+  
     ![service-mirros](./Assets/istio-trafficplit-bluegreen.png)
-
+  
     ```bash
     #Blue/Green
     #Deploy PodInfo Blue
@@ -492,11 +509,11 @@
     
     #Check Routing behaviour again
     ```
-
+  
   - **Fault Injection**
-
+  
     ![service-mirros](./Assets/istio-trafficplit-faultinjection.png)
-
+  
     ```bash
     #Fault Injection
     #Deploy Fault in Ratinsg API
@@ -512,9 +529,9 @@
     #Check Comments in the file
     #Check Routing behaviour
     ```
-
+  
   - **Circuit Breaker**
-
+  
     ```bash
     #Circuit Breaker
     #Deploy HttpBin App
@@ -542,17 +559,17 @@
     #Change parameters in the $istioPath/Examples/Networking/httpbin-destination-rule.yaml file
     #Play around and see the chnage in the behaviour
     ```
-
+  
   - **Service Mirroring or Shadowing**
-
+  
     ![service-mirros](./Assets/istio-mirroring.png)
-
+  
     
-
+  
     ![k8s-mirroring-cross](./Assets/k8s-mirroring-cross.png)
-
+  
     
-
+  
     ```bash
     #Service Mirroring or Shadowing
     #Create Secondary Cluster - CLI or Portal
@@ -638,9 +655,9 @@
     #Observe that all calls being replicated to helloworld-v2 of secondary cluster
     
     ```
-
+  
   - **Cleanup**
-
+  
     ```bash
     #Cleanup
     
@@ -652,7 +669,24 @@
     istioctl x uninstall --set profile=default --purge --context=$CTX_CLUSTER2
     kubectl delete namespace istio-system --context=$CTX_CLUSTER2
     ```
-
+  
     
 
 ## References
+
+- [AKS Secure Baseline](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/containers/aks/secure-baseline-aks)
+- [AKS Networking](https://docs.microsoft.com/en-us/azure/aks/concepts-network)
+- [Cluster Isloation](https://docs.microsoft.com/en-us/azure/aks/operator-best-practices-cluster-isolation)
+- [Resource Management](https://docs.microsoft.com/en-us/azure/aks/developer-best-practices-resource-management)
+- [Scheduling](https://docs.microsoft.com/en-us/azure/aks/operator-best-practices-scheduler)
+- [Advanced Scheduling](https://docs.microsoft.com/en-us/azure/aks/operator-best-practices-advanced-scheduler)
+- [AKS Storage](https://docs.microsoft.com/en-us/azure/aks/concepts-storage)
+- [AKS Backups](https://docs.microsoft.com/en-us/azure/aks/operator-best-practices-storage)
+- [Scaling AKS Clustrer](https://docs.microsoft.com/en-us/azure/aks/concepts-scale)
+- [Security in AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/concepts-security)
+- [Azure Policy](https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes)
+- [AKS Monitoring](https://docs.microsoft.com/en-us/azure/aks/monitor-aks)
+- [Upgrade AKS Cluster](https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster)
+- [Security and Kernel Updates](https://docs.microsoft.com/en-us/azure/aks/node-updates-kured)
+- [Patching](https://docs.microsoft.com/en-us/azure/architecture/operator-guides/aks/aks-upgrade-practices)
+- [AKS Best Practices](https://docs.microsoft.com/en-us/azure/aks/best-practices?toc=https%3A%2F%2Fdocs.microsoft.com%2Fen-us%2Fazure%2Farchitecture%2Ftoc.json&bc=https%3A%2F%2Fdocs.microsoft.com%2Fen-us%2Fazure%2Farchitecture%2Fbread%2Ftoc.json)
