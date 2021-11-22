@@ -2,69 +2,59 @@
 
 ## Table of Contents
 
-- **[Understand K8s High Level Architecture](#Understand K8s High Level Architecture)**
-- **[Understand AKS High Level Architecture](#Understand AKS High Level Architecture)**
-- **[AKS Baseline Architecture](#AKS Baseline architecture)**
-- **[Target Reference Architecture](#Target Reference Architecture)**
-- **[What to Accomplish](#What to Accomplish)**
+- **[K8s High Level Architecture](#K8s-High-Level-Architecture)**
+- **[AKS High Level Architecture](#AKS-High-Level-Architecture)**
+- **[AKS Baseline Architecture](#AKS-Baseline-Architecture)**
+- **[Target Reference Architecture](#Target-Reference-Architecture)**
+- **[What to Accomplish](#What-to-Accomplish)**
 - **[HOL](#HOL)**
-  - **[Local Variables](#Local Variables)**
-  - **[Login to Azure](#Login to Azure)**
-  - **[Pre-Config](#Pre-Config)**
-    - **[Service Principal](#Service Principal)**
-    - **[Resource Group](#Resource Group)**
-    - **[Virtual Network](#Virtual Network)**
-      - **[Azure CNI](#Azure CNI)**
-      - **[Hub](#Hub)**
-      - **[Spoke](#Spoke)**
-    - **[Azure Container Registry](#Azure Container Registry)**
+  - **[Local Variables](#Local-Variables)**
+  - **[Login to Azure](#Login-to-Azure)**
+  - **[Pre Config](#Pre-Config)**
+    - **[Service Principal](#Service-Principal)**
+    - **[Resource Group](#Resource-Group)**
+    - **[Virtual Network](#Virtual-Network)**
+    - **[Azure Container Registry](#Azure-Container-Registry)**
     - **[KeyVault](#KeyVault)**
-    - **[Log Analytics Workspace](#Log Analytics Workspace)**
-    - **[Network Peering](#Network Peering)**
+    - **[Log Analytics Workspace](#Log-Analytics-Workspace)**
+    - **[Network Peering](#Network-Peering)**
   - **[Setup](#Setup)**
-    - **[Create AKS Cluster](#Create AKS Cluster)**
+    - **[Create AKS Cluster](#Create-AKS-Cluster)**
       - **[Isolation](#Isolation)**
-        - **[Physical](#Physical)**
-        - **[Logical](#Logical)**
-      - **[Cluster Creation](#Cluster Creation)**
+      - **[Cluster Creation](#Cluster-Creation)**
       - **[Authentication](#Authentication)**
-      - **[Nodepool Creation](#Nodepool Creation)**
+      - **[Nodepool Creation](#Nodepool-Creation)**
       - **[AutoScaling](#AutoScaling)**
-        - **[Update System Nodepool](#Update System Nodepool)**
-        - **[Update API Nodepool](#Update API Nodepool)**
-  - **[Post-Config](#Post-Config)**
-    - **[Secure AKS Cluster](#Secure AKS Cluster)**
-    - **[Create Namespaces](#Create Namespaces)**
-    - **[Deploy Application Gateway](#Deploy Application Gateway)**
+        - **[Update System Nodepool](#Update-System-Nodepool)**
+        - **[Update API Nodepool](#Update-API-Nodepool)**
+  - **[Post Config](#Post-Config)**
+    - **[Secure AKS Cluster](#Secure-AKS-Cluster)**
+    - **[Create Namespaces](#Create-Namespaces)**
+    - **[Deploy Application Gateway](#Deploy-Application-Gateway)**
     - **[RBAC](#RBAC)**
-    - **[Ingress - Smoke](#Ingress - Smoke)**
-    - **[TEST - Smoke](#TEST - Smoke)**
-  - **[Deploy MicroServices - DEV](#Deploy MicroServices - DEV)**
-  - **[Deploy MicroServices - QA](#Deploy MicroServices - QA)**
-  - **[Resources Sizing for Containers](#Resources Sizing for Containers)**
-  - **[Readiness/Liveness for Containers](#Readiness/Liveness for Containers)**
-  - **[Network Policies](#Network Policies)**
-  - **[Monitoring and Logging](#Monitoring and Logging)**
-  - **[Cluster Health](#Cluster Health)**
-  - **[Node and Pod Health](#Node and Pod Health)**
-  - **[Observe and Analyze Workload Deployments](#Observe and Analyze Workload Deployments)**
-  - **[VSCode Extension for Diagonistics](#VSCode Extension for Diagonistics)**
-  - **[Enable Prometheus for AKS](#Enable Prometheus for AKS)**
-  - **[Monitoring with Grafana](#Monitoring with Grafana)**
-  - **[Load Testing](#Load Testing)**
-  - **[Cluster Upgrade](#Cluster Upgrade)**
-  - **[Cleanup resources](#Cleanup resources)**
+    - **[Ingress Smoke](#Ingress Smoke)**
+    - **[TEST Smoke](#TEST Smoke)**
+  - **[Resources Sizing for Containers](#Resources Sizing)**
+  - **[Readiness/Liveness for Containers](#Readiness/Liveness)**
+  - **[Network Policies](#Network-Policies)**
+  - **[Monitoring and Logging](#Monitoring-and-Logging)**
+  - **[Cluster Health](#Cluster-Health)**
+  - **[Enable Prometheus for AKS](#Enable-Prometheus-for-AKS)**
+  - **[Monitoring with Grafana](#Monitoring-with-Grafana)**
+  - **[Load Testing](#Load-Testing)**
+  - **[Cluster Upgrade](#Cluster-Upgrade)**
+  - **[Cleanup Resources](#Cleanup-Resources)**
 - **[References](#References)**
 
 
 
-## Understand K8s High Level Architecture
+## K8s High Level Architecture
 
 ## ![K8s-HLD](./Assets/K8s-HLD.png)
 
 
 
-## Understand AKS High Level Architecture
+## AKS High Level Architecture
 
 ## ![AKS-HLD](./Assets/AKS-HLD.png)
 
@@ -222,7 +212,7 @@
   #az account set -s $subscriptionId
   ```
 
-- ### Pre-Config
+- ### Pre Config
 
   - #### Service Principal
 
@@ -620,7 +610,7 @@
     kubectl get ns
     ```
 
-  - ##### Ingress - Smoke
+  - ##### Ingress Smoke
 
     ```bash
     #Deploy Ingress Rule object for Smoke namespace
@@ -632,7 +622,7 @@
     #helm uninstall ingress-chart -n aks-train-smoke
     ```
 
-  - ##### TEST - Smoke
+  - ##### TEST Smoke
 
     ```bash
     #Test Cluster Health and end-to-end connectivity
@@ -764,7 +754,7 @@
     curl -k https://qa-<appgw-dns-name>/
     ```
 
-- #### Resources Sizing for Containers
+- #### Resources Sizing
 
   - Specify Requests for CPU and Memory
   - Specify Limits for CPU and Memory
@@ -783,7 +773,7 @@
   cpuLimit: "200m"
   ```
 
-- #### Readiness/Liveness for Containers
+- #### Readiness/Liveness
 
   - Provide Endpoints to check *Readiness* of the Container
   - Provide Endpoints to check *Liveness* of the Container
@@ -1039,7 +1029,7 @@
       --max-surge 33% --node-image-only --no-wait
   ```
 
-- #### Cleanup resources
+- #### Cleanup Resources
 
   ```bash
   #Cleanup resources - Individual
