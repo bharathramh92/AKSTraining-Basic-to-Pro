@@ -2,29 +2,29 @@
 
 ## Table of Contents 
 
-- [**Pre-Requisites**](#Pre-Requisites)
+- [**Pre Requisites**](#Pre Requisites)
 - [**HOL**](#HOL)
-  - **[Local Variables](#Local Variables)**
-  - **[Login to Azure](#Login to Azure)**
-  - **[API Management](#API Management)**
+  - **[Local Variables](#Local-Variables)**
+  - **[Login to Azure](#Login-to-Azure)**
+  - **[API Management](#API-Management)**
   - **[KEDA](#KEDA)**
-  - **[Azure Policy](#Azure Policy)**
-  - **[Service Mesh](#Service Mesh)**
-    - **[What it is?](#What it is?)**
+  - **[Azure Policy](#Azure-Policy)**
+  - **[Service Mesh](#Service-Mesh)**
+    - **[What it is?](#What-it-is?)**
     - **[Features](#Features)**
-    - **[Set CLI Variables for Istio](#Set CLI Variables for Istio)**
-    - **[Download Istio](#Download Istio)**
-    - **[Install and Configure Istio](#Install and Configure Istio)**
+    - **[Set CLI Variables for Istio](#Set-CLI-Variables-for-Istio)**
+    - **[Download Istio](#Download-Istio)**
+    - **[Install and Configure Istio](#Install-and-Configure-Istio)**
     - **[Observability](#Observability)**
-    - **[Traffic Shifting](#Traffic Shifting)**
+    - **[Traffic Shifting](#Traffic-Shifting)**
     - **[Blue/Green](#Blue/Green)**
-    - **[Fault Injection](#Fault Injection)**
-    - **[Circuit Breaker](#Circuit Breaker)**
-    - **[Service Mirroring or Shadowing](#Service Mirroring or Shadowing)**
+    - **[Fault Injection](#Fault-Injection)**
+    - **[Circuit Breaker](#Circuit-Breaker)**
+    - **[Service Mirroring or Shadowing](#Service-Mirroring-or-Shadowing)**
     - **[Cleanup](#Cleanup)**
   - **[References](#References)**
 
-## Pre-Requisites
+## Pre Requisites
 
 ![AKS-Ref-Achitecture-v2.2](./Assets/AKS-Ref-Achitecture-v2.2.png)
 
