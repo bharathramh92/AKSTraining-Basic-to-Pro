@@ -2,7 +2,7 @@
 
 ## Table of Contents 
 
-- [**Pre Requisites**](#Pre Requisites)
+- [**Pre Requisites**](#Pre-Requisites)
 - [**HOL**](#HOL)
   - **[Local Variables](#Local-Variables)**
   - **[Login to Azure](#Login-to-Azure)**
