@@ -1,5 +1,61 @@
 # AKS HOL - Basic to Advanced
 
+## Table of Contents
+
+- **[Understand K8s High Level Architecture](#Understand K8s High Level Architecture)**
+- **[Understand AKS High Level Architecture](#Understand AKS High Level Architecture)**
+- **[AKS Baseline Architecture](#AKS Baseline architecture)**
+- **[Target Reference Architecture](#Target Reference Architecture)**
+- **[What to Accomplish](#What to Accomplish)**
+- **[HOL](#HOL)**
+  - **[Local Variables](#Local Variables)**
+  - **[Login to Azure](#Login to Azure)**
+  - **[Pre-Config](#Pre-Config)**
+    - **[Service Principal](#Service Principal)**
+    - **[Resource Group](#Resource Group)**
+    - **[Virtual Network](#Virtual Network)**
+      - **[Azure CNI](#Azure CNI)**
+      - **[Hub](#Hub)**
+      - **[Spoke](#Spoke)**
+    - **[Azure Container Registry](#Azure Container Registry)**
+    - **[KeyVault](#KeyVault)**
+    - **[Log Analytics Workspace](#Log Analytics Workspace)**
+    - **[Network Peering](#Network Peering)**
+  - **[Setup](#Setup)**
+    - **[Create AKS Cluster](#Create AKS Cluster)**
+      - **[Isolation](#Isolation)**
+        - **[Physical](#Physical)**
+        - **[Logical](#Logical)**
+      - **[Cluster Creation](#Cluster Creation)**
+      - **[Authentication](#Authentication)**
+      - **[Nodepool Creation](#Nodepool Creation)**
+      - **[AutoScaling](#AutoScaling)**
+        - **[Update System Nodepool](#Update System Nodepool)**
+        - **[Update API Nodepool](#Update API Nodepool)**
+  - **[Post-Config](#Post-Config)**
+    - **[Secure AKS Cluster](#Secure AKS Cluster)**
+    - **[Create Namespaces](#Create Namespaces)**
+    - **[Deploy Application Gateway](#Deploy Application Gateway)**
+    - **[RBAC](#RBAC)**
+    - **[Ingress - Smoke](#Ingress - Smoke)**
+    - **[TEST - Smoke](#TEST - Smoke)**
+  - **[Deploy MicroServices - DEV](#Deploy MicroServices - DEV)**
+  - **[Deploy MicroServices - QA](#Deploy MicroServices - QA)**
+  - **[Resources Sizing for Containers](#Resources Sizing for Containers)**
+  - **[Readiness/Liveness for Containers](#Readiness/Liveness for Containers)**
+  - **[Network Policies](#Network Policies)**
+  - **[Monitoring and Logging](#Monitoring and Logging)**
+  - **[Cluster Health](#Cluster Health)**
+  - **[Node and Pod Health](#Node and Pod Health)**
+  - **[Observe and Analyze Workload Deployments](#Observe and Analyze Workload Deployments)**
+  - **[VSCode Extension for Diagonistics](#VSCode Extension for Diagonistics)**
+  - **[Enable Prometheus for AKS](#Enable Prometheus for AKS)**
+  - **[Monitoring with Grafana](#Monitoring with Grafana)**
+  - **[Load Testing](#Load Testing)**
+  - **[Cluster Upgrade](#Cluster Upgrade)**
+  - **[Cleanup resources](#Cleanup resources)**
+- **[References](#References)**
+
 
 
 ## Understand K8s High Level Architecture
@@ -76,7 +132,7 @@
 
 ## HOL
 
-- **Local Variables**
+- ### Local Variables
 
   ```bash
   baseFolderPath=""
@@ -153,7 +209,7 @@
   lwResourceGroup="monitoring-workshop-rg"
   ```
 
-- **Login to Azure**
+- ### Login to Azure
 
   ```bash
   #Login to Azure
@@ -166,9 +222,9 @@
   #az account set -s $subscriptionId
   ```
 
-- **Pre-Config**
+- ### Pre-Config
 
-  - **Service Principal**
+  - #### Service Principal
 
     ```bash
     #Create Service Principal
@@ -196,20 +252,20 @@
     spPassword=""
     ```
 
-  - **Resource Group**
+  - #### Resource Group
 
     ```bash
     #Create Resource Group for AKS workloads
     az group create -n $aksResourceGroup -l $location
     ```
 
-  - **Virtual Network**
+  - #### Virtual Network
 
-    - **Azure CNI**
+    - ##### Azure CNI
 
       ![physical-isolation](./Assets/azure-cni.png)
 
-    - **Hub**
+    - ##### Hub
 
       ```bash
       #Deploy Hub Virtual Network
@@ -223,7 +279,7 @@
       echo $masterSubnetId
       ```
 
-    - **Spoke**
+    - ##### Spoke
 
       ```bash
       #Deploy Spoke Virtual Network
@@ -255,7 +311,7 @@
       az role assignment create --assignee $spAppId --role "Network Contributor" --scope $aksVnetId
       ```
 
-  - **Azure Container Registry**
+  - #### Azure Container Registry
 
     ```bash
     #Deploy ACR
@@ -267,7 +323,7 @@
     az role assignment create --assignee $spAppId --role "AcrPull" --scope $acrId
     ```
 
-  - **KeyVault**
+  - #### KeyVault
 
     ```bash
     #Deploy KeyVault
@@ -281,7 +337,7 @@
     keyvaultId=$(az keyvault show -n $keyVaultName -g $aksResourceGroup --query="id" -o tsv)
     ```
 
-  - **Log Analytics Workspace**
+  - #### Log Analytics Workspace
 
     ```bash
     #Deploy LogAnalytics Workspace
@@ -293,7 +349,7 @@
     az role assignment create --assignee $spAppId --role "Contributor" --scope $logWorkspaceId
     ```
     
-  - **Network Peering**
+  - ##### Network Peering
 
     ```bash
     #Master Vnet to AKS Peering
@@ -307,25 +363,26 @@
     
     
 
-- **Setup**
-  - **Create AKS Cluster**
-
-    - **Isolation**
-
-      - **Physical**
-
+- ### Setup
+  
+  - #### Create AKS Cluster
+  
+    - ##### Isolation
+  
+      - ###### Physical
+  
       ​	![physical-isolation](./Assets/physical-isolation.png)
-
+  
       
-
-      - **Logical**
-
+  
+      - ###### Logical
+  
       ​	![logical-isolation](./Assets/logical-isolation.png)
-
+  
     
-
-    - **Cluster Creation**
-
+  
+    - ##### Cluster Creation
+  
       ```bash
       #Create Public AKS cluster
       az aks create --name $clusterName \
@@ -345,9 +402,9 @@
       --aad-tenant-id $aadTenantID \
       --attach-acr $acrName --workspace-resource-id $logWorkspaceId
       ```
-
-    - **Authentication**
-
+  
+    - ##### Authentication
+  
       ```bash
       #Connect to AKS cluster and check status
       az aks get-credentials -g $aksResourceGroup --name $clusterName --admin --overwrite
@@ -356,9 +413,9 @@
       #Connect to AKS cluster as Admin
       az aks get-credentials -g $resourceGroup -n $clusterName --admin
       ```
-
-    - **Nodepool Creation**
-
+  
+    - ##### Nodepool Creation
+  
       ```bash
       #Create Additional Nodepool - API Nodepool
       az aks nodepool add --cluster-name $clusterName --resource-group $aksResourceGroup \
@@ -366,30 +423,30 @@
       --node-count $apiPoolNodeCount --node-vm-size $apiPoolNodeSize --os-type $osType \
       --mode User
       ```
-
-    - **AutoScaling**
-
+  
+    - ##### AutoScaling
+  
       ![AKS-Components-AutoScaling](./Assets/AKS-Components-AutoScaling.png)
-
+  
       
-
-      - **Update System Nodepool**
-
+  
+      - ###### Update System Nodepool
+  
         ```bash
         az aks nodepool update --cluster-name $clusterName --resource-group $aksResourceGroup \
         --enable-cluster-autoscaler --min-count $sysPoolNodeCount --max-count $sysPoolMaxNodeCount \
         --name $sysPoolName
         ```
-
-      - **Update API Nodepool**
-
+  
+      - ###### Update API Nodepool
+  
         ```bash
         az aks nodepool update --cluster-name $clusterName --resource-group $aksResourceGroup \
         --enable-cluster-autoscaler --min-count $apiPoolNodeCount --max-count $apiPoolMaxNodeCount \
         --name $apiPoolName
         ```
-
-- **Post-Config**
+  
+- #### Post-Config
 
   ![appgw-overview](./Assets/appgw-overview.png)
 
@@ -397,7 +454,7 @@
 
   ![aks-short-view](./Assets/aks-short-view.png)
 
-  - **Secure AKS cluster**
+  - ##### Secure AKS cluster
 
     ```bash
     #A Private DNS Zone is needed to resolve all Private IP addresses
@@ -465,7 +522,7 @@
     kubectl get svc -A
     ```
 
-  - **Create Namespaces**
+  - ##### Create Namespaces
 
     ```bash
     #Create Namespaces
@@ -479,7 +536,7 @@
     kubectl create ns aks-train-smoke
     ```
 
-  - **Deploy Application Gateway**
+  - ##### Deploy **Application Gateway**
 
     ![appgw-overview](./Assets/appgw-internals.png)
 
@@ -491,11 +548,11 @@
     CLI - https://docs.microsoft.com/en-us/azure/application-gateway/quick-create-cli
     ```
 
-    - Create **Application Gateway**
+    - ###### Create **Application Gateway**
 
       - Ideally this should be done through ARM template; for this exercise we would assume that the resource would be created using Azure Portal
 
-    - Configure **Backend Pool**
+    - ###### Configure **Backend Pool**
 
       ![backendPool-1](./Assets/backendPool-1.png)
 
@@ -505,7 +562,7 @@
 
       
 
-    - Configure **Multi-site Listener**
+    - ###### Configure **Multi-site Listener**
 
       ![http-settings-1](./Assets/listeners-1.png)
 
@@ -513,7 +570,9 @@
 
       ![http-settings-1](./Assets/listeners-2.png)
 
-    - Configure **Http Settings**
+      
+
+    - ###### Configure **Http Settings**
 
       ![http-settings-1](./Assets/http-settings-1.png)
 
@@ -527,7 +586,7 @@
 
       
 
-    - Configure **Rules**
+    - ###### Configure **Rules**
 
       ![http-settings-1](./Assets/rules-1.png)
 
@@ -541,7 +600,7 @@
 
       
 
-  - **RBAC**
+  - ##### RBAC
 
     ```bash
     #Deploy RBAC for the AKS cluster
@@ -561,7 +620,7 @@
     kubectl get ns
     ```
 
-  - **Ingress - Smoke**
+  - ##### Ingress - Smoke
 
     ```bash
     #Deploy Ingress Rule object for Smoke namespace
@@ -573,7 +632,7 @@
     #helm uninstall ingress-chart -n aks-train-smoke
     ```
 
-  - **TEST - Smoke**
+  - ##### TEST - Smoke
 
     ```bash
     #Test Cluster Health and end-to-end connectivity
@@ -592,7 +651,7 @@
     curl -k https://smoke-<appgw-dns-name>/healthz
     ```
 
-- **Deploy MicroServices - DEV**
+- #### Deploy MicroServices - DEV
 
   ![ratings-api-flow2](./Assets/ratings-api-flow2.png)
 
@@ -650,7 +709,7 @@
   #helm uninstall ratingsweb-chart -n aks-train-dev
   ```
 
-  - **Ingress - DEV**
+  - ##### Ingress - DEV
 
     ```bash
     #Deploy Ingress Rule object for DEV namespace
@@ -667,7 +726,7 @@
 
   
 
-- **Deploy MicroServices - QA**
+- #### Deploy MicroServices - QA
 
   ```bash
   #Deploy more apps - Ratings app
@@ -691,7 +750,7 @@
   #helm uninstall ratingsweb-chart -n aks-train-qa
   ```
 
-  - **Ingress - QA**
+  - ##### Ingress - QA
 
     ```bash
     #Deploy Ingress Rule object for QA namespace
@@ -705,7 +764,7 @@
     curl -k https://qa-<appgw-dns-name>/
     ```
 
-- **Resources Sizing for Containers**
+- #### Resources Sizing for Containers
 
   - Specify Requests for CPU and Memory
   - Specify Limits for CPU and Memory
@@ -724,7 +783,7 @@
   cpuLimit: "200m"
   ```
 
-- **Readiness/Liveness for Containers**
+- #### Readiness/Liveness for Containers
 
   - Provide Endpoints to check *Readiness* of the Container
   - Provide Endpoints to check *Liveness* of the Container
@@ -743,13 +802,13 @@
 
   
 
-- **Network Policies**
+- #### Network Policies
 
   ![AKS-Components-NP](./Assets/AKS-Components-NP.png)
 
   
 
-  - **Network Policies - Ratings API for DEV**
+  - ##### Network Policies - Ratings API for DEV
 
     ```bash
     #East-West Traffic Security
@@ -759,7 +818,7 @@
     #helm uninstall netpol-ratingsapi-chart -n aks-train-dev
     ```
 
-  - **Network Policies - Ratings Web for DEV**
+  - ##### Network Policies - Ratings Web for DEV
 
     ```bash
     helm install netpol-ratingsweb-chart -n aks-train-dev $setupFolderPath/Helms/netpol-chart/ -f $setupFolderPath/Helms/netpol-chart/values-ratingsweb-dev.yaml
@@ -768,7 +827,7 @@
     #helm uninstall netpol-ratingsweb-chart -n aks-train-dev
     ```
     
-  - **Network Policies - Test**
+  - ##### Network Policies - Test
 
     ```bash
     #Call Ratings app Url; check end-to-end connectivity
@@ -815,7 +874,7 @@
 
     
 
-- **Monitoring and Logging**
+- #### Monitoring and Logging
 
   ![oms-1](./Assets/oms-1.png)
 
@@ -825,7 +884,7 @@
 
   
 
-  - **Cluster Health**
+  - ##### Cluster Health
 
     ![aks-diag-4](./Assets/aks-diag-4.png)
 
@@ -843,7 +902,7 @@
 
     
 
-  - **Node and Pod Health**
+  - ##### Node and Pod Health
 
     
 
@@ -853,16 +912,23 @@
 
     ![azmon-2](./Assets/azmon-2.png)
 
-  - **Observe and Analyze Workload Deployments**
+  - ##### Observe and Analyze Workload Deployments
 
     - View Metrics from Azure Portal
+    
     - View Insights from Azure Portal
+    
     - Create a Dashboard in Azure Portal
+    
     - Log Analytics with Container Insights
+    
     - Select Pre-defined Queries and Check Results
+    
     - Create Azure Monitor Workbook and View Results
     
-  - **VSCode Extension**
+      
+    
+  - ##### VSCode Extension for Diagonistics
 
     ![aks-diag-4](./Assets/aks-diag-3.png)
 
@@ -876,7 +942,7 @@
 
     
 
-  - **Enable Prometheus for AKS**
+  - ##### Enable Prometheus for AKS
 
     ```bash
     #Azure Monitor with Prometheus
@@ -886,7 +952,7 @@
     https://aka.ms/container-azm-ms-agentconfig
     ```
 
-  - **Monitoring with Grafana**
+  - ##### Monitoring with Grafana
 
     ```bash
     #AKS Monitoring with Grafana
@@ -904,7 +970,7 @@
     ```
     
 
-- **Load Testing**
+- #### Load Testing
 
   ![jmeter-aks](./Assets/jmeter-aks.jpeg)
 
@@ -917,26 +983,26 @@
   #Open JMeter
   ```
   
-- **Cluster Upgrade**
+- #### Cluster Upgrade
 
   ![cluster-upgrade](./Assets/cluster-upgrade.png)
 
   - Refer [Here](https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster)
 
-  - **Max surge**
+  - ##### Max surge
 
     - How Many Additional Nodes to add while Upgrade in progress?
       - **Default** = 1
       - **Standard/Optimal** = 33% (of existing no. of nodes in Nodepool)
         - This value can be Integer as well as Percentage
 
-  - **During an upgrade**
+  - ##### During an upgrade
 
     - Minimum of Max Surge can be 1
     - Maximum of Max Surge can be equal to the number of nodes in your node pool
     - Larger values can be set but the maximum number of nodes used for max surge won't be higher than the number of nodes in the pool at the time of upgrade
 
-  - **Steps**
+  - ##### Steps
 
     - Add a new buffer node (*or as many nodes as configured in max surge*) to the cluster that runs the specified Kubernetes version
     - *Cordon* and *Drain* one of the old nodes to minimize disruption to running applications (*if you're using max surge it will cordon and drain as many nodes at the same time as the number of buffer nodes specified*).
@@ -954,7 +1020,7 @@
     az aks show --resource-group $aksResourceGroup --name $clusterName --output table
     ```
 
-- **Node Image Upgrade**
+- #### Node Image Upgrade
 
   ```bash
   #Check Node details
@@ -973,7 +1039,7 @@
       --max-surge 33% --node-image-only --no-wait
   ```
 
-- **Cleanup resources**
+- #### Cleanup resources
 
   ```bash
   #Cleanup resources - Individual
