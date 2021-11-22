@@ -32,9 +32,9 @@
     - **[Create Namespaces](#Create-Namespaces)**
     - **[Deploy Application Gateway](#Deploy-Application-Gateway)**
     - **[RBAC](#RBAC)**
-    - **[Ingress Smoke](#Ingress Smoke)**
-    - **[TEST Smoke](#TEST Smoke)**
-  - **[Resources Sizing for Containers](#Resources Sizing)**
+    - **[Ingress Smoke](#Ingress-Smoke)**
+    - **[TEST Smoke](#TEST-Smoke)**
+  - **[Resources Sizing for Containers](#Resources-Sizing)**
   - **[Readiness/Liveness for Containers](#Readiness/Liveness)**
   - **[Network Policies](#Network-Policies)**
   - **[Monitoring and Logging](#Monitoring-and-Logging)**
