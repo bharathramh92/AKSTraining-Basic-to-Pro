@@ -70,7 +70,7 @@
 
 
 
-## AKS Baseline architecture
+## AKS Baseline Architecture
 
 ![secure-baseline-architecture](./Assets/secure-baseline-architecture.svg)
 
