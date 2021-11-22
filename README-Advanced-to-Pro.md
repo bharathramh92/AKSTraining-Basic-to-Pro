@@ -1,6 +1,6 @@
 # AKS HOL - Advanced to Pro
 
-## TOC
+## Table of Contents 
 
 - [**Pre-Requisites**](#Pre-Requisites)
 - [**HOL**](#HOL)
