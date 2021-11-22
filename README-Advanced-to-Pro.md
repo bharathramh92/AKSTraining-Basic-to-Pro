@@ -1,5 +1,29 @@
 # AKS HOL - Advanced to Pro
 
+## TOC
+
+- [**Pre-Requisites**](#Pre-Requisites)
+- [**HOL**](#HOL)
+  - **[Local Variables](#Local Variables)**
+  - **[Login to Azure](#Login to Azure)**
+  - **[API Management](#API Management)**
+  - **[KEDA](#KEDA)**
+  - **[Azure Policy](#Azure Policy)**
+  - **[Service Mesh](#Service Mesh)**
+    - **[What it is?](#What it is?)**
+    - **[Features](#Features)**
+    - **[Set CLI Variables for Istio](#Set CLI Variables for Istio)**
+    - **[Download Istio](#Download Istio)**
+    - **[Install and Configure Istio](#Install and Configure Istio)**
+    - **[Observability](#Observability)**
+    - **[Traffic Shifting](#Traffic Shifting)**
+    - **[Blue/Green](#Blue/Green)**
+    - **[Fault Injection](#Fault Injection)**
+    - **[Circuit Breaker](#Circuit Breaker)**
+    - **[Service Mirroring or Shadowing](#Service Mirroring or Shadowing)**
+    - **[Cleanup](#Cleanup)**
+  - **[References](#References)**
+
 ## Pre-Requisites
 
 ![AKS-Ref-Achitecture-v2.2](./Assets/AKS-Ref-Achitecture-v2.2.png)
@@ -47,7 +71,7 @@
 
 ## HOL
 
-- **Local Variables**
+- ### Local Variables
 
   ```bash
   baseFolderPath=""
@@ -124,7 +148,7 @@
   lwResourceGroup="monitoring-workshop-rg"
   ```
 
-- **Login to Azure**
+- ### Login to Azure
 
   ```bash
   az login --tenant $tenantId
@@ -136,7 +160,7 @@
   #az account set -s $subscriptionId
   ```
 
-- **API Management**
+- ### API Management
 
   ![apim-short-view](./Assets/apim-short-view.png)
 
@@ -173,7 +197,7 @@
 
     
 
-- **KEDA**
+- ### KEDA
 
   ![keda-arch](./Assets/keda-arch.png)
 
@@ -275,7 +299,7 @@
   #helm uninstall keda -n keda
   ```
 
-- **Azure Policy**
+- ### Azure Policy
 
   - Refer [Policy Reference](https://docs.microsoft.com/en-us/azure/aks/policy-reference)
 
@@ -295,13 +319,13 @@
     
     
 
-- **Service Mesh**
+- ### Service Mesh
 
-  - What it is?
+  - #### What it is?
 
     ![istio-arch](./Assets/istio-arch.png)
 
-  - **Features**
+  - #### Features
 
     - Observability
     - Distributed Tracing
@@ -316,7 +340,7 @@
   - Remove Nginx Ingress Controller
     - The in-built Ingress Gateway from Service mesh would be used
 
-  - **Set CLI Variables for Istio**
+  - #### Set CLI Variables for Istio
 
     ```bash
     primaryResourceGroup=$aksResourceGroup
@@ -334,7 +358,7 @@
     az aks get-credentials -g $primaryResourceGroup -n $primaryClusterName --context $CTX_CLUSTER1
     ```
 
-  - **Download Istio**
+  - #### Download Istio
 
     ```bash
     #Download Istio binary
@@ -348,7 +372,7 @@
     export PATH=$PWD/bin:$PATH
     ```
 
-  - **Install and Configure Istio**
+  - #### Install and Configure Istio
 
     ```bash
     #Create namespaces for Istio
@@ -403,7 +427,7 @@
     curl -k https://kiali-<appgw-dns-name>/
     ```
   
-  - **Observability**
+  - #### Observability
   
     ![service-mirros](./Assets/istio-metrics-graph.png)
   
@@ -452,7 +476,7 @@
     curl -k https://ratings-<appgw-dns-name>/
     ```
   
-  - **Traffic Shifting**
+  - #### Traffic Shifting
   
     ![service-mirros](./Assets/istio-trafficplit.png)
   
@@ -481,7 +505,7 @@
     #Check Routing behaviour again
     ```
   
-  - **Blue/Green**
+  - #### Blue/Green
   
     ![service-mirros](./Assets/istio-trafficplit-bluegreen.png)
   
@@ -510,7 +534,7 @@
     #Check Routing behaviour again
     ```
   
-  - **Fault Injection**
+  - #### Fault Injection
   
     ![service-mirros](./Assets/istio-trafficplit-faultinjection.png)
   
@@ -530,7 +554,7 @@
     #Check Routing behaviour
     ```
   
-  - **Circuit Breaker**
+  - #### Circuit Breaker
   
     ```bash
     #Circuit Breaker
@@ -560,7 +584,7 @@
     #Play around and see the chnage in the behaviour
     ```
   
-  - **Service Mirroring or Shadowing**
+  - #### Service Mirroring or Shadowing
   
     ![service-mirros](./Assets/istio-mirroring.png)
   
@@ -656,7 +680,7 @@
     
     ```
   
-  - **Cleanup**
+  - #### Cleanup
   
     ```bash
     #Cleanup
