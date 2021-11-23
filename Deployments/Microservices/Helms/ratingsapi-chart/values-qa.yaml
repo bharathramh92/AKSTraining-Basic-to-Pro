@@ -40,7 +40,7 @@ service:
     targetPort: 3000
 hpa:
   name: ratingsapi-hpa
-  namespace: aks-train-dev
+  namespace: aks-train-qa
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
