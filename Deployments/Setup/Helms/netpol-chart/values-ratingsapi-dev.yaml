@@ -1,6 +1,6 @@
 netpols:
   name: ratingsapi-netpol
-  namespace: aks-workshop-dev
+  namespace: aks-train-dev
   podLabels:
     app: ratingsapi-pod
   policyTypes:
@@ -12,7 +12,7 @@ netpols:
           app: ratingsweb-pod
     - namespaceSelector:
         matchLabels:
-          name: aks-workshop-cluster-ing-ns      
+          name: aks-train-ing-ns
     ports:
     - protocol: TCP
       port: 3000
