@@ -77,7 +77,7 @@ data:
         ## This will take effect when monitor_kubernetes_pods is set to true
         ##   ex: monitor_kubernetes_pods_namespaces = ["default1", "default2", "default3"]
         # monitor_kubernetes_pods_namespaces = ["default1"]
-        monitor_kubernetes_pods_namespaces = ["aks-train-smoke"]
+        monitor_kubernetes_pods_namespaces = ["aks-train-smoke", "aks-train-dev"]
 
         ## Label selector to target pods which have the specified label
         ## This will take effect when monitor_kubernetes_pods is set to true
