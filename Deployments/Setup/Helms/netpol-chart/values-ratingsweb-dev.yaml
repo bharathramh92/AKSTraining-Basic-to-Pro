@@ -1,6 +1,6 @@
 netpols:  
   name: ratingsweb-netpol
-  namespace: aks-workshop-dev
+  namespace: aks-train-dev
   podLabels:
     app: ratingsweb-pod
   policyTypes:
@@ -10,7 +10,7 @@ netpols:
   - sources:
     - namespaceSelector:
         matchLabels:
-          name: aks-workshop-cluster-ing-ns          
+          name: aks-train-ing-ns          
     ports:
     - protocol: TCP
       port: 8080
@@ -25,20 +25,21 @@ netpols:
   #         app: ratingsapi-pod
 
   #Enable/Diasble this to see changes in Egress flow
-  #   - namespaceSelector:
-  #       matchLabels:
-  #         name: kube-system
-  #     podSelector:
-  #       matchLabels:
-  #         k8s-app: kube-dns
+  #kubectl label namespace kube-system name=kube-system
+    # - namespaceSelector:
+    #     matchLabels:
+    #       name: kube-system
+    #   podSelector:
+    #     matchLabels:
+    #       k8s-app: kube-dns
 
   #Enable this to make Egress restrictions
-  #   ports:
-  #   - protocol: TCP
-  #     port: 3000
+    # ports:
+    # - protocol: TCP
+    #   port: 3000
 
   #Enable/Diasble this to see changes in Egress flow
-  #   - protocol: TCP
-  #     port: 53
-  #   - protocol: UDP
-  #     port: 53
+    # - protocol: TCP
+    #   port: 53
+    # - protocol: UDP
+    #   port: 53
