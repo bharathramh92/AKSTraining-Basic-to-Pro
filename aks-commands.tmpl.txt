@@ -975,8 +975,8 @@ helm install keda kedacore/keda --namespace keda
 kubectl create ns serverless
 
 #Create a Storage Account in Azure Portal - kedateststg
-#Create a Blob Container in Azure Portal - kedablob
-#Create a Queue Container in Azure Portal - kedaqueue
+#Create a Blob Container in Azure Portal - aciimageblob
+#Create a Queue Container in Azure Portal - aciimagequeue
 
 #Note down the Connection String of the storage account
 #This would be added as K8s secret inside the AKS cluster
