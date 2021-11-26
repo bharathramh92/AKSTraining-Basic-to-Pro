@@ -1,15 +1,15 @@
 ingress:
   name: aks-workshop-ingress
-  namespace: aks-workshop-qa
+  namespace: aks-train-qa
   annotations:
     ingressClass: nginx
     proxyBodySize: "10m"
     enableCors: "true"
     rewriteTarget: /$1
   hosts:
-  - name: qa.<dns-name>
+  - name: aks-train-qa.<dns-name>
     paths:
     - path: /?(.*)
-      pathType: prefix
+      pathType: Prefix
       service: ratingsweb-service
       port: 80

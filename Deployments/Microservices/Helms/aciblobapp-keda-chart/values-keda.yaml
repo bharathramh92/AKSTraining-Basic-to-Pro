@@ -1,0 +1,22 @@
+triggerAuth:
+  name: aciblobstorage-auth
+  namespace: serverless
+  secretTargetRefs:
+  - parameter: connection
+    name: keda-stg-secret
+    key: AzureWebJobsStorage
+scaledObject:
+  name: aciblob-scaledobject
+  namespace: serverless
+  scaleTargetRef:
+    name: aciblobapp-deploy    
+    apiVersion: apps/v1
+    kind: Deployment
+  minReplicaCount: 1
+  maxReplicaCount: 100
+  triggers:
+  - type: azure-blob
+    blobContainerName: aciimageblob
+    blobCount: '5'
+    connectionFromEnv: connection 
+    triggerAuth: aciblobstorage-auth  

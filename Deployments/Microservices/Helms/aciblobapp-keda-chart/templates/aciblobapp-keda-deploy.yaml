@@ -1,0 +1,36 @@
+{{ $triggerAuth := .Values.triggerAuth }}
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: {{ $triggerAuth.name }}
+  namespace: {{ $triggerAuth.namespace }}
+spec:
+  {{- range $secretTarget := $triggerAuth.secretTargetRefs }}
+  secretTargetRef:
+  - parameter: {{ $secretTarget.parameter }}
+    name: {{ $secretTarget.name }}
+    key: {{ $secretTarget.key }}
+  {{- end }}
+---
+{{ $scaledObject := .Values.scaledObject }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ $scaledObject.name }}
+  namespace: {{ $scaledObject.namespace }}
+spec:
+  scaleTargetRef:
+  {{ toYaml $scaledObject.scaleTargetRef | nindent 4 }}
+  minReplicaCount: {{ $scaledObject.minReplicaCount }}
+  maxReplicaCount: {{ $scaledObject.maxReplicaCount }}
+  {{- range $trigger := $scaledObject.triggers }}
+  triggers:
+  - type: {{ $trigger.type }}
+    metadata:
+      blobContainerName: {{ $trigger.blobContainerName }}
+      blobCount: {{ $trigger.blobCount | quote }}
+      connectionFromEnv: {{ $trigger.connectionFromEnv }}
+    authenticationRef:
+     name: {{ $trigger.triggerAuth}}
+  {{- end }}
+  

@@ -1,6 +1,6 @@
 ingress:
   name: aks-workshop-ssltest-ingress
-  namespace: ssltest
+  namespace: aks-train-ssltest
   annotations:
     ingressClass: nginx
     proxyBodySize: "10m"

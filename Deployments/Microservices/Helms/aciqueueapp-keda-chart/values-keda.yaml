@@ -1,0 +1,22 @@
+triggerAuth:
+  name: acistorage-auth
+  namespace: serverless
+  secretTargetRefs:
+  - parameter: connection
+    name: keda-stg-secret
+    key: AzureWebJobsStorage
+scaledObject:
+  name: aciqueue-scaledobject
+  namespace: serverless
+  scaleTargetRef:
+    name: aciqueueapp-deploy
+    apiVersion: apps/v1
+    kind: Deployment
+  minReplicaCount: 1
+  maxReplicaCount: 100
+  triggers:
+  - type: azure-queue
+    queueName: aciimagequeue
+    queueLength: '10'
+    connectionFromEnv: connection 
+    triggerAuth: acistorage-auth  

@@ -1,0 +1,24 @@
+deployment:
+  name: aciblobapp-deploy
+  namespace: serverless
+  labels:
+    app: aciblobapp-deploy
+  selectorLabels:
+    app: aciblobapp-pod
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 1
+  nodeSelector:
+    agentpool: aksapipool  
+  containers:
+  - name: aciblobapp-app
+    image: akstrnacr.azurecr.io/aciblob-app:v1.0.0
+    imagePullPolicy: IfNotPresent    
+    memoryRequest: "250Mi"
+    cpuRequest: "250m"
+    memoryLimit: "500Mi"
+    cpuLimit: "500m"
+    containerPorts: [80]  
+    envFrom:
+    - name: keda-stg-secret

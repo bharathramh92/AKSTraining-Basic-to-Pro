@@ -1,19 +1,19 @@
 ingress:
   name: smoke-ingress
-  namespace: smoke
+  namespace: aks-train-smoke
   annotations:
    ingressClass: nginx
    enableCors: "true"
    rewriteTarget: /$1
   tls:
   - hosts:
-    - "*.<dns-name>"
+    - "aks-train-smoke.<dns-name>"
     secretName: aks-workshop-tls-secret
   hosts:
-  - name: smoke-prv.<dns-name>
+  - name: aks-train-smoke.<dns-name>
     paths:
-    - path: /nginx/?(.*)
-      pathType: prefix
+    - path: /healthz/?(.*)
+      pathType: Prefix
       service: nginx-svc
       port: 80
   

@@ -1,6 +1,6 @@
 ingress:
   name: aks-workshop-ingress
-  namespace: aks-workshop-dev
+  namespace: aks-train-dev
   annotations:
     ingressClass: nginx
     proxyBodySize: "10m"
@@ -11,9 +11,10 @@ ingress:
     - "*.<dns-name>"
     secretName: aks-workshop-tls-secret
   hosts:
-  - name: dev-prv.<dns-name>
-    paths:
+  - name: aks-train-dev.<dns-name>
+    paths:    
     - path: /?(.*)
+      pathType: Prefix
       service: ratingsweb-service
       port: 80 
   

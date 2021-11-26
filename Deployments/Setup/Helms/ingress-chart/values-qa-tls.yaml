@@ -1,6 +1,6 @@
 ingress:
   name: aks-workshop-ingress
-  namespace: aks-workshop-qa
+  namespace: aks-train-qa
   annotations:
     ingressClass: nginx
     proxyBodySize: "10m"
@@ -11,7 +11,7 @@ ingress:
     - "*.<dns-name>"
     secretName: aks-workshop-tls-secret
   hosts:
-  - name: qa-prv.<dns-name>
+  - name: aks-train-qa.<dns-name>
     paths:
     - path: /?(.*)
       pathType: prefix

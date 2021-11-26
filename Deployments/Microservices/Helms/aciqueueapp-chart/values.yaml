@@ -1,0 +1,24 @@
+deployment:
+  name: aciqueueapp-deploy
+  namespace: serverless
+  labels:
+    app: aciqueueapp-deploy
+  selectorLabels:
+    app: aciqueueapp-pod
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 1
+  nodeSelector:
+    agentpool: aksapipool  
+  containers:
+  - name: aciqueueapp-app
+    image: akstrnacr.azurecr.io/aciqueue-app:v1.0.0
+    imagePullPolicy: IfNotPresent    
+    memoryRequest: "100Mi"
+    cpuRequest: "100m"
+    memoryLimit: "200Mi"
+    cpuLimit: "200m"
+    containerPorts: [80]  
+    envFrom:
+    - name: keda-stg-secret
