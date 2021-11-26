@@ -188,13 +188,27 @@ az keyvault set-policy -n $keyVaultName -g $aksResourceGroup --key-permissions g
 keyvaultId=$(az keyvault show -n $keyVaultName -g $aksResourceGroup --query="id" -o tsv)
 echo $keyvaultId
 
-#Get LogAnalytics Workspace
+#Deploy LogAnalytics Workspace
+az monitor log-analytics workspace create -n $logWorkspaceName -g $lwResourceGroup
 logWorkspaceId=$(az monitor log-analytics workspace show -n $logWorkspaceName -g $lwResourceGroup --query="id" -o tsv)
 echo $logWorkspaceId
 
 #Assign Role to Service Principal for the LogAnalytics Workspace
 az role assignment create --assignee $spAppId --role "Contributor" --scope $logWorkspaceId
 
+#Master Vnet to AKS Peering
+az network vnet peering create -n $masterAKSPeering --remote-vnet $aksVnetId \
+-g $masterResourceGroup --vnet-name $masterVnetName
+
+az network vnet peering show -n $masterAKSPeering -g $masterResourceGroup \
+--vnet-name $masterVnetName
+
+#AKS Vnet to Master Peering
+az network vnet peering create -n $aksMasterPeering --remote-vnet $masterVnetId \
+-g $aksResourceGroup --vnet-name $aksVnetName
+
+az network vnet peering show -n $aksMasterPeering -g $aksResourceGroup \
+--vnet-name $aksVnetName
 
 ================================================================================
 
@@ -358,11 +372,15 @@ helm create rbac-chart
 
 helm install rbac-chart -n aks-train-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
 #helm upgrade rbac-chart -n aks-train-dev $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-dev.yaml
+#helm uninstall rbac-chart -n aks-train-dev
 
 helm install rbac-chart -n aks-train-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
 #helm upgrade rbac-chart -n aks-train-qa $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-qa.yaml
+#helm uninstall rbac-chart -n aks-train-qa
 
-#helm uninstall rbac-chart
+helm install rbac-chart -n aks-train-smoke $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-smoke.yaml
+#helm upgrade rbac-chart -n aks-train-smoke $setupFolderPath/Helms/rbac-chart/ -f $setupFolderPath/Helms/rbac-chart/values-smoke.yaml
+#helm uninstall rbac-chart -n aks-train-smoke
 
 #Check access by multiple login ids
 az aks get-credentials -g $aksResourceGroup --name $clusterName
@@ -379,6 +397,12 @@ helm create ingress-chart
 helm install ingress-chart -n aks-train-smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
 
 #helm upgrade  ingress-chart -n aks-train-smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
+#helm uninstall ingress-chart -n aks-train-smoke
+
+#kubectl create secret tls aks-workshop-tls-secret -n aks-train-smoke --cert="$baseFolderPath/Certs/star_internal_wkshpdev_com.pem" --key="$baseFolderPath/Certs/star.internal.wkshpdev.com.key"
+#helm install ingress-chart -n aks-train-smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke-tls.yaml
+
+#helm upgrade ingress-chart -n aks-train-smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke-tls.yaml
 #helm uninstall ingress-chart -n aks-train-smoke
 
 ================================================================================
@@ -463,6 +487,12 @@ helm create ingress-chart
 helm install  ingress-chart -n aks-train-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
 
 #helm upgrade  ingress-chart -n aks-train-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
+#helm uninstall ingress-chart -n aks-train-dev
+
+#kubectl create secret tls aks-workshop-tls-secret -n aks-train-dev --cert="$baseFolderPath/Certs/star_internal_wkshpdev_com.pem" --key="$baseFolderPath/Certs/star.internal.wkshpdev.com.key"
+#helm install ingress-chart -n aks-train-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev-tls.yaml
+
+#helm upgrade ingress-chart -n aks-train-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev-tls.yaml
 #helm uninstall ingress-chart -n aks-train-dev
 
 #Call Ratings app Url; check end-to-end connectivity
@@ -579,6 +609,7 @@ kubectl exec -it $podName -n aks-train-dev -- curl -k http://ratingsapp-web.aks-
 #         app: ratingsapi-pod
 
 #Enable/Diasble this to see changes in Egress flow
+#kubectl label namespace kube-system name=kube-system
 #   - namespaceSelector:
 #       matchLabels:
 #         name: kube-system
@@ -664,7 +695,7 @@ helm install aks-train-grafana -n grafana-monitor grafana/grafana --set nodeSele
 #helm uninstall aks-train-grafana -n grafana-monitor
 
 
-#Integrate Grafan with Azure Monitor
+#Integrate Grafana with Azure Monitor
 https://grafana.com/grafana/plugins/grafana-azure-monitor-datasource/
 
 
@@ -861,7 +892,7 @@ aksIngControllerName="aks-train-ing"
 aksIngControllerNSName="$aksIngControllerName-ns"
 aksIngControllerFileName="internal-ingress"
 aksIngControllerFilePath="$baseFolderPath/Setup/Common/internal-ingress.yaml"
-privateDNSZoneName="internal.wkshpdev.com"
+privateDNSZoneName=""
 privateDNSZoneId=
 backendIpAddress=
 aadAdminGroupIDs=""
@@ -953,11 +984,18 @@ kubetcl create secret generic keda-stg-secret -n serverless --from-literal=Azure
 
 ACIBlobApp
 ================================================================================
+#Clone/Fork/Download Souerce code
+https://github.com/monojit18/ACIBlobApp.git
+
+#CD to the director where Dockerfile exists
+#This docker build but performed in a Cloud Agent(VM) by ACR
+az acr build -t $acrName.azurecr.io/aciblob-app:v1.0.0 -r $acrName .
+
 #Deploy ACIBlobApp in serverless namespace
 #App reacts to Blob events
-helm install aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-chart/ -f $microservicesFolderPath/Helms/aciblobapp-chart/AKSWorkshop/values-dev.yaml
+helm install aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-chart/ -f $microservicesFolderPath/Helms/aciblobapp-chart/values.yaml
 
-#helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-chart/ -f $microservicesFolderPath/Helms/aciblobapp-chart/AKSWorkshop/values-dev.yaml
+#helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-chart/ -f $microservicesFolderPath/Helms/aciblobapp-chart/values.yaml
 #helm uninstall aciblobapp-chart -n serverless
 
 #Check if app is deployed and no. of replicas running
@@ -967,10 +1005,10 @@ kubectl get all -n serverless
 
 #Deploy KEDA objects in serverless namespace
 #These objects would ensure that the application scales based on Blob trigger
-helm install aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-keda-chart/ -f $microservicesFolderPath/Helms/aciblobapp-keda-chart/AKSWorkshop/values-dev.yaml
+helm install aciblobapp-keda-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-keda-chart/ -f $microservicesFolderPath/Helms/aciblobapp-keda-chart/values-keda.yaml
 
-#helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-keda-chart/ -f $microservicesFolderPath/Helms/aciblobapp-keda-chart/AKSWorkshop/values-dev.yaml
-#helm uninstall aciblobapp-chart -n serverless
+#helm upgrade aciblobapp-keda-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-keda-chart/ -f $microservicesFolderPath/Helms/aciblobapp-keda-chart/values-keda.yaml
+#helm uninstall aciblobapp-keda-chart -n serverless
 
 #Keep adding large no. of images into Blob Container
 #Check ACIBlobApp deployment on AKS cluster
@@ -979,11 +1017,18 @@ helm install aciblobapp-chart -n serverless $microservicesFolderPath/Helms/acibl
 
 ACIQueueApp
 ================================================================================
+#Clone/Fork/Download Souerce code
+https://github.com/monojit18/ACIQueueApp.git
+
+#CD to the director where Dockerfile exists
+#This docker build but performed in a Cloud Agent(VM) by ACR
+az acr build -t $acrName.azurecr.io/aciqueue-app:v1.0.0 -r $acrName .
+
 #Deploy ACIQueueApp in serverless namespace
 #App reacts to Blob events
-helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/AKSWorkshop/values-dev.yaml
+helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/values-dev.yaml
 
-#helm upgrade aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/AKSWorkshop/values-dev.yaml
+#helm upgrade aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/values-dev.yaml
 #helm uninstall aciqueueapp-chart -n serverless
 
 #Check if app is deployed and no. of replicas running
@@ -993,10 +1038,10 @@ kubectl get all -n serverless
 
 #Deploy KEDA objects in serverless namespace
 #These objects would ensure that the application scales based on Blob trigger
-helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-keda-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-keda-chart/AKSWorkshop/values-dev.yaml
+helm install aciqueueapp-keda-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-keda-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-keda-chart/values-keda-dev.yaml
 
-#helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-keda-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-keda-chart/AKSWorkshop/values-dev.yaml
-#helm uninstall aciqueueapp-chart -n serverless
+#helm upgrade aciqueueapp-keda-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-keda-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-keda-chart/values-keda-dev.yaml
+#helm uninstall aciqueueapp-keda-chart -n serverless
 
 #Keep adding large no. of messages into Queue Container
 #Check ACIQueueApp deployment on AKS cluster
@@ -1015,6 +1060,16 @@ Refer Here:
 https://docs.microsoft.com/en-us/azure/aks/policy-reference
 https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes
 
+az provider register --namespace Microsoft.PolicyInsights
+az aks enable-addons --addons azure-policy --name $clusterName --resource-group $aksResourceGroup
+
+# azure-policy pod is installed in kube-system namespace
+kubectl get pods -n kube-system
+
+# gatekeeper pod is installed in gatekeeper-system namespace
+kubectl get pods -n gatekeeper-system
+
+kubectl get constrainttemplates
 
 ================================================================================
 
@@ -1081,6 +1136,7 @@ kubectl create namespace istio-system --context $CTX_CLUSTER1
 kubectl create namespace primary --context $CTX_CLUSTER1
 
 #Install Istio CLI
+
 #Select Default Istio Profile settings
 #Ingress Gateway with Public IP Address
 istioctl install --context=$CTX_CLUSTER1 --set profile=default -y
@@ -1108,6 +1164,11 @@ kubectl rollout status deployment/kiali -n istio-system
 #Istio Ingress gateway with public or private IP
 kubectl get svc -n istio-system
 
+#If Ingress Gateway installed with Public IP Address
+#Launch Kiali on localhost as a background process
+istioctl dashboard kial&
+
+#If Ingress Gateway installed with Private IP Address
 #Need a Gateway to expose the Kiali service outside
 #Check Routing definitions
 #Replace <dns-name>
@@ -1120,7 +1181,7 @@ Add Http Settings for Kiali Gateway
 Add Rules for Kiali Gateway Listener
 
 #Launch Kiali in the browser
-curl -k https://kiali-<appgw-dns-name>/
+curl -k https://kiali-<appgw-dns-name>/kiali/console/workloads
 
 ================================================================================
 
@@ -1356,10 +1417,12 @@ Cleanup
 #Uninstall Istio setup - primary cluster
 istioctl x uninstall --set profile=default --purge --context=$CTX_CLUSTER1
 kubectl delete namespace istio-system --context=$CTX_CLUSTER1
+kubectl delete namespace primary --context=$CTX_CLUSTER1
 
 #Uninstall Istio setup - secondary cluster
 istioctl x uninstall --set profile=default --purge --context=$CTX_CLUSTER2
 kubectl delete namespace istio-system --context=$CTX_CLUSTER2
+kubectl delete namespace secondary --context=$CTX_CLUSTER1
 
 
 
