@@ -7,7 +7,7 @@ ingress:
     enableCors: "true"
     sslpassThrough: "true"
   hosts:
-  - name: proxy.<dns-name>
+  - name: apiproxy.<dns-name>
     paths:
     - path: /
       pathType: Exact
@@ -25,7 +25,7 @@ ingress:
       pathType: Exact
       service: api-proxy-svc
       port: 443
-  - name: bkend.<dns-name>
+  - name: apibkend.<dns-name>
     paths:
     - path: /
       pathType: Exact

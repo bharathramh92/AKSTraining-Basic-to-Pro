@@ -20,7 +20,7 @@ metadata:
     {{ end }}
     {{ if $ingress.annotations.sslpassThrough }}
     nginx.ingress.kubernetes.io/ssl-passthrough: {{ $ingress.annotations.sslpassThrough | quote }}
-    {{ end }}    
+    {{ end }} 
 spec:
   rules:
   {{- range $host := $ingress.hosts }}
