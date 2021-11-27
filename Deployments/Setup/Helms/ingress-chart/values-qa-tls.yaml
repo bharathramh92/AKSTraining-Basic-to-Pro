@@ -14,7 +14,7 @@ ingress:
   - name: aks-train-qa.<dns-name>
     paths:
     - path: /?(.*)
-      pathType: prefix
+      pathType: Prefix
       service: ratingsweb-service
       port: 80 
   
