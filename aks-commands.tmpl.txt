@@ -536,6 +536,22 @@ curl -k https://qa-<appgw-dns-name>/
 
 ================================================================================
 
+SSL Options
+================================================================================
+
+kubectl create secret tls aks-workshop-tls-secret -n aks-train-ssltest --cert="$baseFolderPath/Certs/star_internal_wkshpdev_com.pem" --key="$baseFolderPath/Certs/star.internal.wkshpdev.com.key"
+helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
+
+#helm upgrade ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
+#helm uninstall ingress-chart -n aks-train-ssltest
+
+#helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-passthru.yaml
+
+#helm upgrade ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-passthru.yaml
+#helm uninstall ingress-chart -n aks-train-ssltest
+
+================================================================================
+
 Resources Sizing for Containers
 ================================================================================
 - Specify Requests for CPU and Memory
