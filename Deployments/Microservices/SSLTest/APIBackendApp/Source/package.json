@@ -1,0 +1,27 @@
+{
+  "name": "apibackendapp",
+  "version": "1.1.0",
+  "description": "API Backend App",
+  "main": "apibackendapp.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "preinstall": "mkdir -p logs",
+    "install": "npm install --save-dev express body-parser dotenv crypto",
+    "start": "node apibackendapp.js 1> logs/apibackendapp.log 2>& 1"
+  },
+  "keywords": [
+    "nginx cache",
+    "api backend"
+  ],
+  "author": "Monojit Datta",
+  "license": "MIT",
+  "devDependencies": {
+    "body-parser": "^1.19.0",
+    "crypto": "^1.0.1",
+    "dotenv": "^8.6.0",
+    "express": "^4.17.1"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  }
+}

@@ -1,4 +1,12 @@
 !.gitignore
 aks-commands.txt
-README-Basic-to-Advanced copy.md
-Certs
+**/Certs
+**/.vscode
+**/.env
+**/SSLtest/**/Misc
+**/Source/logs
+**/Source/Certs
+**/Source/Certs/**
+**/Source/node_modules/**
+**/Source/package-lock.json
+**/SSLTest/**/YAMLs

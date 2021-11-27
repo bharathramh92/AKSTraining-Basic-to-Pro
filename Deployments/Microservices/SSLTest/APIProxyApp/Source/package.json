@@ -1,0 +1,24 @@
+{
+  "name": "apiproxyapp",
+  "version": "1.1.0",
+  "description": "API Proxy App",
+  "main": "apiproxyapp.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "preinstall": "mkdir -p logs",
+    "install": "npm install --save-dev express body-parser axios dotenv crypto",
+    "start": "node apiproxyapp.js 1> logs/apiproxyapp.log 2>& 1"
+  },
+  "keywords": [
+    "api proxy"
+  ],
+  "author": "Monojit Datta",
+  "license": "MIT",
+  "devDependencies": {
+    "axios": "^0.21.1",
+    "body-parser": "^1.19.0",
+    "crypto": "^1.0.1",
+    "dotenv": "^8.6.0",
+    "express": "^4.17.1"
+  }
+}
