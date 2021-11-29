@@ -34,6 +34,7 @@
     - **[RBAC](#RBAC)**
     - **[Ingress Smoke](#Ingress-Smoke)**
     - **[TEST Smoke](#TEST-Smoke)**
+    - **[SSL Options](#SSL-Options)**
   - **[Resources Sizing for Containers](#Resources-Sizing)**
   - **[Readiness/Liveness for Containers](#Readiness/Liveness)**
   - **[Network Policies](#Network-Policies)**
@@ -540,54 +541,229 @@
 
     - ###### Create **Application Gateway**
 
-      - Ideally this should be done through ARM template; for this exercise we would assume that the resource would be created using Azure Portal
+      - Ideally this should be done through ARM template; for this exercise, assume that the resource would be created using Azure Portal
+
+      - Components created along with *Application Gateway*
+
+        - **Backend Pool**
+
+          - *IP Addresses/FQDNs* of the AKS Cluster
+          - Requests would be forwarded to this cluster
+
+        - **Http/s Listeners**
+
+          - Listens for all incoming traffics
+          - Supports both Http and Https clients
+          - Clients that want to connect over Https, should upload the PFX Certificate (*containing the Private Key*) of their DNS server; during the Creation or Initial Configuration of *Application Gateway*
+          - Application Gateway acts as a server for the Client that wants to connect. For Https, it uses the Private Key of PFX certificate to Decrypt message from Clients
+          - **Basic**
+            - *Single Tenant*
+            - Client wants to connect to only single Backend Pool
+          - **Multi-Site**
+            - *Multi Tenant*
+            - Same Client wants to connect to multiple backends based on **host-header** or *host-name*
+
+        - **Http Rules**
+
+          - **Basic**
+
+            - *Single* backend host for the *Associated Listener*
+            - *Routing* is handled the backend only (i.e. *in this case inside AKS cluster*); nothing to be decided at the Application Gateway level
+          - **Path-Based**
+
+            - *Route* to appropriate backend based on *Path* parameters
+            - Same backend host but different internal paths - */backend/path1, /backend/path2* etc.
+
+        - **Http Settings**
+
+          - Defines Backend Http/S settings
+
+          - **Http**
+
+            - Client does not want SSL to flow through then it is offloaded at Application Gateway and subsequent communication is *Http*
+
+          - **Https**
+
+            - SSL to continue till *Backend host*
+            - Need to upload **Trusted Toot Certificate** of the *Backend Server*
+            - Here Application Gateway acts as the Client and *backend host* acts as the Server
+
+          - **Health Probe**
+
+            - *Monitors* the health pdf Backend Pool
+
+            - Removes *Unhealthy* resources from Pool automatically and Puts them back when they are *healthy*
+
+            - Consults with *Http Settings* and based on the configuration calls defined health probe route periodically
+
+            - For backend systems like *AKS* or *APIM*, this is imperative that a custom health probe is specified while creating or configuring the Application Gateway
+
+              
 
     - ###### Configure **Backend Pool**
 
-      ![backendPool-1](./Assets/backendPool-1.png)
+      ![appgw-bkpool](./Assets/appgw-bkpool.png)
 
       
 
-      ![backendPool-1](./Assets/backendPool-2.png)
+      ![appgw-bkpool](./Assets/appgw-bkpool-aks.png)
 
       
+
+      - Target IP address is the Private IP of the Nginx Ingress Controller of AKS cluster
+
+      - All requests are finally routed to this IP
+
+      - This IP address is resolved through Azure Private DNS (*Ref: [Secure AKS cluster](#Secure-AKS-cluster)* )
+
+        
 
     - ###### Configure **Multi-site Listener**
 
-      ![http-settings-1](./Assets/listeners-1.png)
+      - Users can reach to *Application Gateway* and ultimately to the AKS cluster in different ways
+        - **dev** - for connecting to the *DEV* environment of the AKS cluster
+        - **qa** - for connecting to the *QA* environment of the AKS cluster
 
       
 
-      ![http-settings-1](./Assets/listeners-2.png)
+      ![appgw-listeners](./Assets/appgw-listeners.png)
+
+      
+
+      ![appgw-listeners](./Assets/appgw-listeners-dev.png)
+
+      
+
+      ![appgw-listeners](./Assets/appgw-listeners-qa.png)
 
       
 
     - ###### Configure **Http Settings**
 
-      ![http-settings-1](./Assets/http-settings-1.png)
+      - Decides how *Application Gateway* connects to the AKS cluster
+      - Which *environment* in backend to connect to
+        - **dev** - connects to aks-train-dev.internal.<dns-name>.com over **HTTP (80)**
+        - **qa** - connects to aks-train-dev.internal.<dns-name>.com ocer **HTTPS (443)**
+
+      ![appgw-http-settings](./Assets/appgw-http-settings.png)
 
       
 
-      ![http-settings-1](./Assets/http-settings-2.png)
+      ![appgw-http-settings](./Assets/appgw-http-settings-dev.png)
 
       
 
-      ![http-settings-1](./Assets/http-settings-3.png)
+      ![appgw-http-settings](./Assets/appgw-http-settings-dev-2.png)
 
       
+
+      ![appgw-http-settings](./Assets/appgw-http-settings-qa.png)
+
+      
+
+      ![appgw-http-settings](./Assets/appgw-http-settings-qa-2.png)
+
+    ​	
 
     - ###### Configure **Rules**
 
-      ![http-settings-1](./Assets/rules-1.png)
+      - **Rules** connects **Listeners**, **Backend Pools** and **Http Settings**
+
+      ![appgw-rules](./Assets/appgw-rules.png)
 
       
 
-      ![http-settings-1](./Assets/rules-2.png)
+      ![appgw-rules](./Assets/appgw-rules-dev.png)
 
       
 
-      ![http-settings-1](./Assets/rules-3.png)
+      ![appgw-rules](./Assets/appgw-rules-dev-2.png)
 
+      
+
+      ![appgw-rules](./Assets/appgw-rules-qa.png)
+
+      
+
+      ![appgw-rules](./Assets/appgw-rules-qa-2.png)
+
+    
+
+  - ##### SSL Options
+
+    - ###### SSL Offloading at *Application Gateway*
+
+      ![ssl-offload](./Assets/ssl-offload.png)
+
+      
+
+      ```bash
+      #SSL Offloading at Application Gateway
+      #Current implementation DEV is already setup for this
+      
+      #PFX Certtificate is uploaded at Application Gateway for the Listener - aks-train-appgw-dev-listener
+      #Http Settings for aks-train-appgw-dev-http-settings - is setup over Http (80)
+      #Traffic from Application Gateway to Nginx Ingress Controller of AKS cluster is over Http (80)
+      ```
+
+      [ingress-chart/values-dev.yaml](./Deployments/Setup/Helms/ingress-chart/values-dev.yaml)
+
+      ```yaml
+      ingress:
+        name: aks-workshop-ingress
+        namespace: aks-train-dev
+        annotations:
+          ingressClass: nginx
+          proxyBodySize: "10m"
+          enableCors: "true"
+          rewriteTarget: /$1    
+        hosts:
+        #NO TLS is enabled; hence traffic reaches Ingress over Http (80)
+        #Private DNS Zone name
+        - name: aks-train-dev.<dns-name>
+          paths:    
+          - path: /?(.*)
+            pathType: Prefix
+            service: ratingsweb-service
+            port: 80
+      ```
+
+      
+
+    - ###### SSL Offloading at *Nginx Ingress Controller*
+
+      ![ssl-offload](./Assets/backend-protocol-https.png)
+
+      
+      
+      [ingress-chart/values-qa-tls.yaml](./Deployments/Setup/Helms/ingress-chart/values-qa-tls.yaml)
+
+      ```yaml
+      ingress:
+        name: aks-workshop-ingress
+        namespace: aks-train-qa
+        annotations:
+          ingressClass: nginx
+          proxyBodySize: "10m"
+          enableCors: "true"
+          rewriteTarget: /$1
+        tls:
+        #TLS is enabled; hence traffic reaches Ingress over Https (443)
+        #TLS is offloaded at Ingress
+        - hosts:
+          #K8s secret for holding the TLS Certificate
+          - "*.<dns-name>"
+          secretName: aks-workshop-tls-secret
+        hosts:
+        #Private DNS Zone name
+        - name: aks-train-qa.<dns-name>
+          paths:
+          - path: /?(.*)
+            pathType: Prefix
+            service: ratingsweb-service
+            port: 80
+      ```
+      
       
 
   - ##### RBAC
@@ -640,6 +816,26 @@
     #Call Nginx app Url; check end-to-end connectivity
     curl -k https://smoke-<appgw-dns-name>/healthz
     ```
+
+  - ##### SSL Options
+
+    - ###### SSL Offload
+
+      - ###### Offload at the Application Gateway
+
+        ```
+        
+        ```
+
+        
+
+      - ###### Offload at the Nginx Ingress Congtroller
+
+      - ###### Offload at the Pod
+
+      
+
+    
 
 - #### Deploy MicroServices - DEV
 
