@@ -20,5 +20,5 @@ ingress:
     - path: /?(.*)
       pathType: Prefix
       service: ratingsweb-service
-      port: 80 
+      port: 80
   
