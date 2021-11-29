@@ -7,6 +7,8 @@ ingress:
     enableCors: "true"
     rewriteTarget: /$1    
   hosts:
+  #NO TLS is enabled; hence traffic reaches Ingress over Http (80)
+  #Private DNS Zone name
   - name: aks-train-dev.<dns-name>
     paths:    
     - path: /?(.*)

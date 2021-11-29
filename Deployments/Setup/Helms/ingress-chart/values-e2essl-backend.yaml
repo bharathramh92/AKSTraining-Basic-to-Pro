@@ -6,18 +6,25 @@ ingress:
     proxyBodySize: "10m"
     enableCors: "true"
     rewriteTarget: /$1
+    #TLS is continued beyond Ingress till the Application POD
+    #TLS is offloaded at the POD
     backendProtocol: "HTTPS"
   tls:
+  #TLS is enabled; hence traffic reaches Ingress over Https (443)
+  #TLS is offloaded at Ingress
   - hosts:
     - "*.<dns-name>"
+    #K8s secret for holding the TLS Certificate
     secretName: aks-workshop-tls-secret
   hosts:
+  #Private DNS Zone name for apiproxy
   - name: apiproxy.<dns-name>
     paths:
     - path: /?(.*)
       pathType: Prefix
       service: api-proxy-svc
       port: 443 
+  #Private DNS Zone name for apibkend
   - name: apibkend.<dns-name>
     paths:
     - path: /?(.*)

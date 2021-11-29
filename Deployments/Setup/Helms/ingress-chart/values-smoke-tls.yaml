@@ -6,10 +6,14 @@ ingress:
    enableCors: "true"
    rewriteTarget: /$1
   tls:
+  #TLS is enabled; hence traffic reaches Ingress over Https (443)
+  #TLS is offloaded at Ingress
   - hosts:
     - "aks-train-smoke.<dns-name>"
+    #K8s secret for holding the TLS Certificate
     secretName: aks-workshop-tls-secret
   hosts:
+  #Private DNS Zone name
   - name: aks-train-smoke.<dns-name>
     paths:
     - path: /healthz/?(.*)
