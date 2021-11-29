@@ -819,22 +819,75 @@
 
   - ##### SSL Options
 
-    - ###### SSL Offload
+    - ###### SSL Offloading at Application Gateway
 
-      - ###### Offload at the Application Gateway
+      ![ssl-offload](./Assets/ssl-offload.png)
 
-        ```
-        
-        ```
-
-        
-
-      - ###### Offload at the Nginx Ingress Congtroller
-
-      - ###### Offload at the Pod
-
+      ```bash
+      #SSL Offloading at Application Gateway
+      #Current implementation DEV is already setup for this
       
-
+      #PFX Certtificate is uploaded at Application Gateway for the Listener - aks-train-appgw-dev-listener
+      #Http Settings for aks-train-appgw-dev-http-settings - is setup over Http (80)
+      #Traffic from Application Gateway to Nginx Ingress Controller of AKS cluster is over Http (80)
+      ```
+    
+      [ingress-chart/values-dev.yaml](./Deployments/Setup/Helms/ingress-chart/values-dev.yaml)
+    
+      ```yaml
+      ingress:
+      name: aks-workshop-ingress
+      namespace: aks-train-dev
+      annotations:
+        ingressClass: nginx
+        proxyBodySize: "10m"
+        enableCors: "true"
+        rewriteTarget: /$1    
+      hosts:
+      #NO TLS is enabled; hence traffic reaches Ingress over Http (80)
+      #Private DNS Zone name
+      - name: aks-train-dev.<dns-name>
+        paths:    
+        - path: /?(.*)
+          pathType: Prefix
+          service: ratingsweb-service
+          port: 80
+      ```
+    
+    - ###### SSL Offloading at Nginx Ingress Controller
+    
+      ![ssl-offload](./Assets/ssl-offload-ingress.png)
+    
+    ​	
+    
+    ​	[ingress-chart/values-qa-tls.yaml](./Deployments/Setup/Helms/ingress-chart/values-qa-tls.yaml)
+    
+    ```yaml
+    ingress:
+    name: aks-workshop-ingress
+    namespace: aks-train-qa
+    annotations:
+      ingressClass: nginx
+      proxyBodySize: "10m"
+      enableCors: "true"
+      rewriteTarget: /$1
+    tls:
+    #TLS is enabled; hence traffic reaches Ingress over Https (443)
+    #TLS is offloaded at Ingress
+    - hosts:
+      #K8s secret for holding the TLS Certificate
+      - "*.<dns-name>"
+      secretName: aks-workshop-tls-secret
+    hosts:
+    #Private DNS Zone name
+    - name: aks-train-qa.<dns-name>
+      paths:
+      - path: /?(.*)
+        pathType: Prefix
+        service: ratingsweb-service
+        port: 80
+    ```
+    
     
 
 - #### Deploy MicroServices - DEV
