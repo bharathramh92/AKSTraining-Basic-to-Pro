@@ -539,6 +539,13 @@ curl -k https://qa-<appgw-dns-name>/
 SSL Options
 ================================================================================
 
+#SSL Offloading at Application Gateway
+#Current implementation DEV is already setup for this
+
+#PFX Certtificate is uploaded at Application Gateway for the Listener - aks-train-appgw-dev-listener
+#Http Settings for aks-train-appgw-dev-http-settings - is setup over Http (80)
+#Traffic from Application Gateway to Nginx Ingress Controller of AKS cluster is over Http (80)
+
 kubectl create secret tls aks-workshop-tls-secret -n aks-train-ssltest --cert="$baseFolderPath/Certs/star_internal_wkshpdev_com.pem" --key="$baseFolderPath/Certs/star.internal.wkshpdev.com.key"
 helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
 
