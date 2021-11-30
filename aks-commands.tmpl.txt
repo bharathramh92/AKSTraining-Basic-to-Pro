@@ -921,8 +921,8 @@ backendIpAddress=
 aadAdminGroupIDs=""
 aadTenantID=""
 objectId=""
-spAppId=""
-spPassword=""
+spAppId="00000000-0000-0000-0000-000000000000"
+spPassword="Lorem ipsum dolor sit amet"
 logWorkspaceName="aks-train-lw"
 lwResourceGroup="monitoring-workshop-rg"
 
